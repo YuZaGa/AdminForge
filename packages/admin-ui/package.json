@@ -1,0 +1,39 @@
+{
+  "name": "@adminforge/admin-ui",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "DEV=true tsup --watch",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@adminforge/api": "workspace:*",
+    "@adminforge/core": "workspace:*",
+    "@tanstack/react-table": "^8.20.0",
+    "@tiptap/pm": "^3.22.5",
+    "@tiptap/react": "^3.22.5",
+    "@tiptap/starter-kit": "^3.22.5",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0"
+  }
+}

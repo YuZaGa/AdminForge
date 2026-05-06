@@ -1,0 +1,436 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-bg: #f8f9fa;
+  --color-surface: #ffffff;
+  --color-sidebar: #1a1d23;
+  --color-sidebar-hover: #2a2d35;
+  --color-sidebar-active: #3a3d45;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-danger: #ef4444;
+  --color-text: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-sidebar: #9ca3af;
+  --color-border: #e5e7eb;
+  --radius: 8px;
+  --sidebar-width: 260px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* Layout */
+.adminforge-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.adminforge-sidebar {
+  width: var(--sidebar-width);
+  background: var(--color-sidebar);
+  color: var(--color-text-sidebar);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.adminforge-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.adminforge-sidebar-header h1 {
+  font-size: 18px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.adminforge-nav {
+  list-style: none;
+  padding: 12px 0;
+}
+
+.adminforge-nav li a {
+  display: block;
+  padding: 10px 20px;
+  color: var(--color-text-sidebar);
+  font-size: 14px;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+}
+
+.adminforge-nav li a:hover {
+  background: var(--color-sidebar-hover);
+  color: #fff;
+}
+
+.adminforge-nav li a.active {
+  background: var(--color-sidebar-active);
+  color: #fff;
+  border-left-color: var(--color-primary);
+}
+
+.adminforge-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 32px;
+}
+
+/* Dashboard */
+.adminforge-dashboard h2 {
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.adminforge-collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.adminforge-collection-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: box-shadow 0.15s;
+}
+
+.adminforge-collection-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.adminforge-collection-card h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.adminforge-collection-card p {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* Page Header */
+.adminforge-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.adminforge-page-header h2 {
+  font-size: 24px;
+}
+
+/* Buttons */
+.adminforge-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.adminforge-btn:hover {
+  background: #f3f4f6;
+}
+
+.adminforge-btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.adminforge-btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.adminforge-btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.adminforge-btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Table */
+.adminforge-table-wrapper {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.adminforge-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.adminforge-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  background: #f9fafb;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.adminforge-table td {
+  padding: 12px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.adminforge-table tr:last-child td {
+  border-bottom: none;
+}
+
+.adminforge-table tr:hover td {
+  background: #f9fafb;
+}
+
+/* Form */
+.adminforge-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 720px;
+}
+
+.adminforge-field {
+  margin-bottom: 20px;
+}
+
+.adminforge-field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--color-text);
+}
+
+.adminforge-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color 0.15s;
+}
+
+.adminforge-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+.adminforge-textarea {
+  min-height: 200px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.adminforge-field-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.adminforge-field-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.adminforge-field-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.adminforge-form-actions {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Login Page */
+.adminforge-login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.adminforge-login-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+.adminforge-login-card h1 {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.adminforge-login-subtitle {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.adminforge-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.adminforge-login-error {
+  background: #fef2f2;
+  color: var(--color-danger);
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* Rich Text Editor */
+.adminforge-editor {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.adminforge-editor-toolbar {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  padding: 6px 8px;
+  background: #f9fafb;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.adminforge-editor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.1s;
+  min-width: 32px;
+}
+
+.adminforge-editor-btn:hover {
+  background: #e5e7eb;
+}
+
+.adminforge-editor-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.adminforge-editor-content {
+  padding: 12px 16px;
+  min-height: 200px;
+}
+
+.adminforge-editor-content .ProseMirror {
+  outline: none;
+  min-height: 180px;
+}
+
+.adminforge-editor-content .ProseMirror p {
+  margin-bottom: 8px;
+}
+
+.adminforge-editor-content .ProseMirror h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+}
+
+.adminforge-editor-content .ProseMirror h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 12px 0 6px;
+}
+
+.adminforge-editor-content .ProseMirror ul,
+.adminforge-editor-content .ProseMirror ol {
+  padding-left: 24px;
+  margin-bottom: 8px;
+}
+
+.adminforge-editor-content .ProseMirror blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 12px;
+  color: var(--color-text-secondary);
+  margin: 8px 0;
+}
+
+.adminforge-editor-content .ProseMirror code {
+  background: #f3f4f6;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.adminforge-editor-content .ProseMirror pre {
+  background: #1f2937;
+  color: #f3f4f6;
+  padding: 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
+.adminforge-editor-content .ProseMirror pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+}

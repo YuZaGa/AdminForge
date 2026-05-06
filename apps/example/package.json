@@ -1,0 +1,37 @@
+{
+  "name": "example",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "rm -rf .next && next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:makemigrations": "tsx scripts/migrate.ts --name",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:push": "tsx scripts/migrate.ts --push",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@adminforge/admin-ui": "workspace:*",
+    "@adminforge/api": "workspace:*",
+    "@adminforge/auth": "workspace:*",
+    "@adminforge/core": "workspace:*",
+    "@adminforge/db": "workspace:*",
+    "@adminforge/fields": "workspace:*",
+    "@prisma/client": "6.19.3",
+    "next": "^15.0.0",
+    "next-auth": "^5.0.0-beta.25",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prisma": "^6.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

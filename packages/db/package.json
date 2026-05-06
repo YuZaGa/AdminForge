@@ -1,0 +1,32 @@
+{
+  "name": "@adminforge/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "DEV=true tsup --watch",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@adminforge/core": "workspace:*",
+    "@adminforge/fields": "workspace:*",
+    "@prisma/client": "^6.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0"
+  }
+}

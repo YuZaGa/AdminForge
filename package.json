@@ -1,0 +1,23 @@
+{
+  "name": "adminforge",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "fuser -k 3000/tcp 2>/dev/null; turbo build --filter='./packages/*' && pnpm --filter example dev",
+    "dev:packages": "turbo dev --filter='./packages/*' --parallel",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "clean": "turbo clean",
+    "db:makemigrations": "pnpm --filter example db:makemigrations",
+    "db:migrate": "pnpm --filter example db:migrate",
+    "db:push": "pnpm --filter example db:push",
+    "db:studio": "pnpm --filter example db:studio"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "turbo": "^2.9.9"
+  }
+}
