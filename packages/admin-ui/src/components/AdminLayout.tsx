@@ -1,4 +1,5 @@
 import type { AdminForgeConfig } from "@adminforge/core";
+import Link from "next/link";
 
 interface AdminLayoutProps {
   config: AdminForgeConfig;
@@ -11,7 +12,9 @@ export function AdminLayout({ config, children, currentPath }: AdminLayoutProps)
     <div className="adminforge-layout">
       <nav className="adminforge-sidebar">
         <div className="adminforge-sidebar-header">
-          <h1>AdminForge</h1>
+          <Link href="/admin">
+            <h1>AdminForge</h1>
+          </Link>
         </div>
         <ul className="adminforge-nav">
           {config.collections.map((collection) => {
@@ -19,12 +22,12 @@ export function AdminLayout({ config, children, currentPath }: AdminLayoutProps)
             const isActive = currentPath === href;
             return (
               <li key={collection.name}>
-                <a
+                <Link
                   href={href}
                   className={isActive ? "active" : ""}
                 >
                   {collection.label}
-                </a>
+                </Link>
               </li>
             );
           })}

@@ -3,6 +3,7 @@
 import type { AdminForgeConfig, CollectionDefinition } from "@adminforge/core";
 import { AdminLayout } from "../components/AdminLayout.js";
 import { TableEngine } from "../table-engine/TableEngine.js";
+import Link from "next/link";
 
 interface CollectionListPageProps {
   config: AdminForgeConfig;
@@ -16,12 +17,12 @@ export function CollectionListPage({ config, collection, data }: CollectionListP
       <div className="adminforge-collection-page">
         <div className="adminforge-page-header">
           <h2>{collection.label}</h2>
-          <a
+          <Link
             href={`/admin/${collection.name}/new`}
             className="adminforge-btn adminforge-btn-primary"
           >
             Create New
-          </a>
+          </Link>
         </div>
         <TableEngine
           collection={collection}

@@ -1,45 +1,31 @@
 "use client";
 
 import { CollectionListPage } from "@adminforge/admin-ui";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import type { AdminForgeConfig } from "@adminforge/core";
+import { useEffect, useState, use } from "react";
+import { useConfig } from "../../../lib/use-config";
 
-interface CollectionPageData {
-  config: React.ComponentProps<typeof CollectionListPage>["config"];
-  collection: React.ComponentProps<typeof CollectionListPage>["collection"];
-  data: unknown[];
-}
-
-export default function CollectionList() {
-  const params = useParams<{ collection: string }>();
-  const [pageData, setPageData] = useState<CollectionPageData | null>(null);
+export default function CollectionList({ params }: { params: Promise<{ collection: string }> }) {
+  const { collection: collectionName } = use(params);
+  const { config, loading: configLoading } = useConfig();
+  const [data, setData] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!params?.collection) return;
-    Promise.all([
-      fetch("/api/config").then((r) => r.json()),
-      fetch(`/api/${params.collection}`).then((r) => r.json()),
-    ])
-      .then(([config, result]) => {
-        const collection = config.collections.find(
-          (c: { name: string }) => c.name === params.collection
-        );
-        if (collection) {
-          setPageData({ config, collection, data: result.data ?? [] });
-        }
-      })
+    fetch(`/api/${collectionName}`)
+      .then((r) => r.json())
+      .then((result) => setData(result.data ?? []))
+      .catch(() => {})
       .finally(() => setLoading(false));
-  }, [params?.collection]);
+  }, [collectionName]);
 
-  if (loading) return <div className="adminforge-loading">Loading...</div>;
-  if (!pageData) return <div>Collection not found</div>;
+  if (configLoading || loading) {
+    return <div className="adminforge-loading">Loading...</div>;
+  }
 
-  return (
-    <CollectionListPage
-      config={pageData.config}
-      collection={pageData.collection}
-      data={pageData.data}
-    />
-  );
+  const cfg = config as unknown as AdminForgeConfig;
+  const collection = cfg.collections.find((c) => c.name === collectionName);
+  if (!collection) return <div>Collection not found</div>;
+
+  return <CollectionListPage config={cfg} collection={collection} data={data} />;
 }

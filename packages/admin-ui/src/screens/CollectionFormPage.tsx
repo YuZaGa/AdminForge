@@ -3,6 +3,7 @@
 import type { AdminForgeConfig, CollectionDefinition } from "@adminforge/core";
 import { AdminLayout } from "../components/AdminLayout.js";
 import { FormEngine } from "../form-engine/FormEngine.js";
+import Link from "next/link";
 
 interface CollectionFormPageProps {
   config: AdminForgeConfig;
@@ -17,12 +18,12 @@ export function CollectionFormPage({ config, collection, record, isNew }: Collec
       <div className="adminforge-collection-page">
         <div className="adminforge-page-header">
           <h2>{isNew ? `Create ${collection.label}` : `Edit ${collection.label}`}</h2>
-          <a
+          <Link
             href={`/admin/${collection.name}`}
             className="adminforge-btn adminforge-btn-secondary"
           >
             Back
-          </a>
+          </Link>
         </div>
         <FormEngine
           collection={collection}
