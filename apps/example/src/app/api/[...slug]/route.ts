@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import { getConfig, getDb } from "../../../lib/adminforge";
 
 export async function GET(
@@ -28,7 +29,14 @@ export async function GET(
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") ?? "1");
   const pageSize = parseInt(url.searchParams.get("pageSize") ?? "50");
-  const data = await db.findMany(collectionName, { skip: (page - 1) * pageSize, take: pageSize });
+  const search = url.searchParams.get("search");
+
+  const where: Record<string, unknown> = {};
+  if (search) {
+    where.search = search;
+  }
+
+  const data = await db.findMany(collectionName, { where, skip: (page - 1) * pageSize, take: pageSize });
   return Response.json({ data, total: data.length, page, pageSize });
 }
 
@@ -53,6 +61,12 @@ export async function POST(
     const result = await db.create(collectionName, body);
     return Response.json(result, { status: 201 });
   } catch (err) {
+    if (err instanceof z.ZodError) {
+      return Response.json({
+        error: "Validation failed",
+        fields: err.errors.map((e) => ({ path: e.path.join("."), message: e.message })),
+      }, { status: 400 });
+    }
     const error = err as Error;
     return Response.json({ error: error.message }, { status: 400 });
   }
@@ -83,6 +97,12 @@ export async function PATCH(
     const result = await db.update(collectionName, id, body);
     return Response.json(result);
   } catch (err) {
+    if (err instanceof z.ZodError) {
+      return Response.json({
+        error: "Validation failed",
+        fields: err.errors.map((e) => ({ path: e.path.join("."), message: e.message })),
+      }, { status: 400 });
+    }
     const error = err as Error;
     return Response.json({ error: error.message }, { status: 400 });
   }

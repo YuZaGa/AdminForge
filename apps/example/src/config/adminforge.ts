@@ -10,6 +10,7 @@ export const config = defineConfig({
         slug: fields.slug({ from: "title", unique: true }),
         content: fields.richText(),
         published: fields.boolean({ default: false }),
+        coverImage: fields.image(),
       },
       hooks: {
         beforeCreate: async ({ data }) => {

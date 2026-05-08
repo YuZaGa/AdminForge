@@ -15,6 +15,7 @@ model posts {
   slug String? @unique
   content String?
   published Boolean? @default(false)
+  coverImage String?
 }
 
 model categories {

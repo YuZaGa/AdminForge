@@ -21,7 +21,7 @@ function text(options: TextOptions = {}): FieldDefinition {
     },
     ui: {
       component: "text",
-      props: { label: options.label },
+      props: { label: options.label, hidden: options.hidden, readOnly: options.readOnly },
     },
     validation: options.required ? z.string().min(1) : z.string().optional(),
   };
@@ -37,7 +37,7 @@ function boolean(options: BooleanOptions = {}): FieldDefinition {
     },
     ui: {
       component: "boolean",
-      props: { label: options.label },
+      props: { label: options.label, hidden: options.hidden, readOnly: options.readOnly },
     },
     validation: options.required ? z.boolean() : z.boolean().optional(),
   };
@@ -52,7 +52,7 @@ function richText(options: RichTextOptions = {}): FieldDefinition {
     },
     ui: {
       component: "richText",
-      props: { label: options.label },
+      props: { label: options.label, hidden: options.hidden, readOnly: options.readOnly },
     },
     validation: options.required ? z.string().min(1) : z.string().optional(),
   };
@@ -68,7 +68,7 @@ function slug(options: SlugOptions): FieldDefinition {
     },
     ui: {
       component: "slug",
-      props: { from: options.from, label: options.label },
+      props: { from: options.from, label: options.label, hidden: options.hidden, readOnly: options.readOnly },
     },
     validation: options.required
       ? z.string().regex(/^[a-z0-9-]+$/)
@@ -98,6 +98,8 @@ function relation(options: RelationOptions): FieldDefinition {
         to: options.to,
         relationType: options.type,
         label: options.label,
+        hidden: options.hidden,
+        readOnly: options.readOnly,
       },
     },
     validation: options.required ? z.string() : z.string().optional(),
@@ -113,7 +115,7 @@ function date(options: DateOptions = {}): FieldDefinition {
     },
     ui: {
       component: "date",
-      props: { label: options.label },
+      props: { label: options.label, hidden: options.hidden, readOnly: options.readOnly },
     },
     validation: options.required ? z.string().datetime().optional() : z.string().datetime().optional(),
     hooks: {
@@ -136,7 +138,7 @@ function image(options: ImageOptions = {}): FieldDefinition {
     },
     ui: {
       component: "image",
-      props: { label: options.label },
+      props: { label: options.label, hidden: options.hidden, readOnly: options.readOnly },
     },
     validation: z.string().optional(),
   };

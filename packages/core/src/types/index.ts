@@ -31,6 +31,8 @@ export interface FieldOptions {
   default?: unknown;
   unique?: boolean;
   label?: string;
+  hidden?: boolean;
+  readOnly?: boolean;
 }
 
 export interface TextOptions extends FieldOptions {}
