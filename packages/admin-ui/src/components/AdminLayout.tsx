@@ -34,7 +34,21 @@ export function AdminLayout({ config, children, currentPath }: AdminLayoutProps)
         </ul>
       </nav>
       <main className="adminforge-content">
-        {children}
+        <header className="adminforge-topbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid #eee", marginBottom: "24px" }}>
+          <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#333" }}>Dashboard</h2>
+          <div className="adminforge-user-actions">
+            {config.auth?.enabled && (
+              <form action="/api/logout" method="POST">
+                <button type="submit" className="adminforge-btn adminforge-btn-secondary" style={{ cursor: "pointer" }}>
+                  Log Out
+                </button>
+              </form>
+            )}
+          </div>
+        </header>
+        <div style={{ padding: "0 24px" }}>
+          {children}
+        </div>
       </main>
     </div>
   );
