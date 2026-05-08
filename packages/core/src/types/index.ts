@@ -6,6 +6,7 @@ export interface FieldDBMapping {
   unique?: boolean;
   default?: unknown;
   references?: { model: string; field: string };
+  relationType?: "many-to-one" | "one-to-many" | "many-to-many";
 }
 
 export interface FieldUI {

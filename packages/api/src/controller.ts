@@ -43,16 +43,39 @@ export function createController(
 
     async create(data: Record<string, unknown>) {
       const parsed = validationSchema.parse(data);
-      return db.create(collection.name, parsed);
+      const transformed = transformRelations(parsed, false);
+      return db.create(collection.name, transformed);
     },
 
     async update(id: string, data: Record<string, unknown>) {
       const parsed = validationSchema.partial().parse(data);
-      return db.update(collection.name, id, parsed);
+      const transformed = transformRelations(parsed, true);
+      return db.update(collection.name, id, transformed);
     },
 
     async delete(id: string) {
       return db.delete(collection.name, id);
     },
   };
+
+  function transformRelations(data: Record<string, unknown>, isUpdate: boolean) {
+    const transformed = { ...data };
+    for (const [key, value] of Object.entries(transformed)) {
+      const field = collection.fields[key];
+      if (field?.type === "relation") {
+        if (Array.isArray(value)) {
+          if (isUpdate) {
+            transformed[key] = { set: value.map((id: string) => ({ id })) };
+          } else {
+            transformed[key] = { connect: value.map((id: string) => ({ id })) };
+          }
+        } else if (typeof value === "string") {
+          transformed[key] = { connect: { id: value } };
+        } else if (value === null) {
+          transformed[key] = { disconnect: true };
+        }
+      }
+    }
+    return transformed;
+  }
 }

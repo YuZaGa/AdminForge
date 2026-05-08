@@ -88,9 +88,10 @@ function relation(options: RelationOptions): FieldDefinition {
   return {
     type: "relation",
     db: {
-      type: options.type === "many-to-many" ? "String" : "String",
+      type: "String",
       nullable: !options.required,
-      references: { model: options.to, field: "id" },
+      references: options.type === "many-to-one" ? { model: options.to, field: "id" } : undefined,
+      relationType: options.type,
     },
     ui: {
       component: "relation",
@@ -102,7 +103,9 @@ function relation(options: RelationOptions): FieldDefinition {
         readOnly: options.readOnly,
       },
     },
-    validation: options.required ? z.string() : z.string().optional(),
+    validation: options.type === "many-to-one"
+      ? (options.required ? z.string() : z.string().optional())
+      : z.array(z.string()).optional(),
   };
 }
 

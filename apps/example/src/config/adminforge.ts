@@ -11,6 +11,7 @@ export const config = defineConfig({
         content: fields.richText(),
         published: fields.boolean({ default: false }),
         coverImage: fields.image(),
+        tags: fields.relation({ to: "tags", type: "many-to-many", label: "Tags" }),
       },
       hooks: {
         beforeCreate: async ({ data }) => {
@@ -24,6 +25,14 @@ export const config = defineConfig({
     }),
     collection({
       name: "categories",
+      label: "Categories",
+      fields: {
+        name: fields.text({ required: true }),
+      },
+    }),
+    collection({
+      name: "tags",
+      label: "Tags",
       fields: {
         name: fields.text({ required: true }),
       },

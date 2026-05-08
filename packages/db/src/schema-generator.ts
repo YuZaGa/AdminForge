@@ -28,16 +28,39 @@ export function generatePrismaSchema(
   lines.push("}");
   lines.push("");
 
+  const inverseRelations: Record<string, string[]> = {};
+
+  // First pass: generate fields for each model and collect inverse relations
+  const modelBlocks: Record<string, string[]> = {};
+
   for (const collection of config.collections) {
-    lines.push(`model ${collection.name} {`);
-    lines.push("  id        String   @id @default(cuid())");
-    lines.push("  createdAt DateTime @default(now())");
-    lines.push("  updatedAt DateTime @updatedAt");
+    const modelName = collection.name;
+    const block: string[] = [];
+    block.push(`model ${modelName} {`);
+    block.push("  id        String   @id @default(cuid())");
+    block.push("  createdAt DateTime @default(now())");
+    block.push("  updatedAt DateTime @updatedAt");
 
     for (const [name, field] of Object.entries(collection.fields)) {
-      if (field.type === "relation" && field.db.references) {
-        lines.push(`  ${name}Id String${field.db.nullable ? "?" : ""}`);
-        lines.push(`  ${name}   ${field.db.references.model} @relation(fields: [${name}Id], references: [${field.db.references.field}])`);
+      if (field.type === "relation") {
+        const targetModel = (field.ui.props?.to as string) || (field.db.references?.model as string) || "String";
+        const relType = field.db.relationType || "many-to-one";
+
+        if (!inverseRelations[targetModel]) inverseRelations[targetModel] = [];
+
+        if (relType === "many-to-many") {
+          block.push(`  ${name} ${targetModel}[]`);
+          inverseRelations[targetModel].push(`  adminforge_inverse_${modelName}_${name} ${modelName}[]`);
+        } else if (relType === "one-to-many") {
+          block.push(`  ${name} ${targetModel}[]`);
+          inverseRelations[targetModel].push(`  adminforge_inverse_${modelName}_${name}Id String?`);
+          inverseRelations[targetModel].push(`  adminforge_inverse_${modelName}_${name} ${modelName}? @relation(fields: [adminforge_inverse_${modelName}_${name}Id], references: [id])`);
+        } else {
+          // many-to-one (default)
+          block.push(`  ${name}Id String${field.db.nullable ? "?" : ""}`);
+          block.push(`  ${name}   ${targetModel} @relation(fields: [${name}Id], references: [id])`);
+          inverseRelations[targetModel].push(`  adminforge_inverse_${modelName}_${name} ${modelName}[]`);
+        }
       } else {
         const prismaType = mapFieldType(field.db.type);
         const nul = field.db.nullable ? "?" : "";
@@ -54,11 +77,26 @@ export function generatePrismaSchema(
           }
         }
         const ann = annotations.length > 0 ? ` ${annotations.join(" ")}` : "";
-        lines.push(`  ${name} ${prismaType}${nul}${ann}`);
+        block.push(`  ${name} ${prismaType}${nul}${ann}`);
       }
     }
 
-    lines.push("}");
+    modelBlocks[modelName] = block;
+  }
+
+  // Second pass: append inverse relations and close blocks
+  for (const collection of config.collections) {
+    const modelName = collection.name;
+    const block = modelBlocks[modelName];
+    if (inverseRelations[modelName]) {
+      block.push("");
+      block.push("  // Auto-generated inverse relations");
+      for (const inv of inverseRelations[modelName]) {
+        block.push(inv);
+      }
+    }
+    block.push("}");
+    lines.push(block.join("\n"));
     lines.push("");
   }
 

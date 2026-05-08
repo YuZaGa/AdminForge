@@ -62,12 +62,14 @@ export async function POST(
     return Response.json(result, { status: 201 });
   } catch (err) {
     if (err instanceof z.ZodError) {
+      console.error("Validation error for body", body, "Error:", JSON.stringify(err.errors));
       return Response.json({
         error: "Validation failed",
         fields: err.errors.map((e) => ({ path: e.path.join("."), message: e.message })),
       }, { status: 400 });
     }
     const error = err as Error;
+    console.error("Create error:", error.message);
     return Response.json({ error: error.message }, { status: 400 });
   }
 }
@@ -98,12 +100,14 @@ export async function PATCH(
     return Response.json(result);
   } catch (err) {
     if (err instanceof z.ZodError) {
+      console.error("Validation error for body", body, "Error:", JSON.stringify(err.errors));
       return Response.json({
         error: "Validation failed",
         fields: err.errors.map((e) => ({ path: e.path.join("."), message: e.message })),
       }, { status: 400 });
     }
     const error = err as Error;
+    console.error("Update error:", error.message);
     return Response.json({ error: error.message }, { status: 400 });
   }
 }

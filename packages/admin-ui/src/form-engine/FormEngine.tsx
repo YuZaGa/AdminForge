@@ -22,12 +22,14 @@ function FieldRenderer({
   field,
   value,
   onChange,
+  onRelationChange,
   error,
 }: {
   name: string;
   field: FieldDefinition;
   value?: unknown;
   onChange?: (val: string) => void;
+  onRelationChange?: (val: string | string[]) => void;
   error?: string;
 }) {
   const { component, props } = field.ui;
@@ -79,7 +81,9 @@ function FieldRenderer({
           <RelationInput
             name={name}
             to={props?.to as string}
-            value={typeof resolvedValue === "string" ? resolvedValue : undefined}
+            relationType={props?.relationType as string}
+            value={resolvedValue as string | string[] | undefined}
+            onChange={onRelationChange}
             error={error}
             disabled={isReadOnly}
           />
@@ -124,19 +128,32 @@ function FieldRenderer({
 export function FormEngine({ collection, record, isNew }: FormEngineProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [richTextValues, setRichTextValues] = useState<Record<string, string>>({});
+  const [relationValues, setRelationValues] = useState<Record<string, string | string[]>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (record && !isNew) {
       const rt: Record<string, string> = {};
+      const rv: Record<string, string | string[]> = {};
       for (const [key, value] of Object.entries(record)) {
         const field = collection.fields[key];
         if (field?.type === "richText" && typeof value === "string") {
           rt[key] = value;
         }
+        if (field?.type === "relation") {
+          // Prisma returns relation arrays as objects [{id, ...}] — extract IDs
+          if (Array.isArray(value)) {
+            rv[key] = value.map((v: any) => (typeof v === "string" ? v : v.id));
+          } else if (typeof value === "string") {
+            rv[key] = value;
+          } else if (value && typeof value === "object" && (value as any).id) {
+            rv[key] = (value as any).id;
+          }
+        }
       }
       setRichTextValues(rt);
+      setRelationValues(rv);
     }
   }, [record, isNew, collection.fields]);
 
@@ -175,16 +192,23 @@ export function FormEngine({ collection, record, isNew }: FormEngineProps) {
     const data: Record<string, unknown> = {};
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) continue;
+      const field = collection.fields[key];
       if (richTextValues[key]) {
         data[key] = richTextValues[key];
+      } else if (field?.type === "boolean") {
+        data[key] = value.toString() === "on";
+      } else if (field?.type === "relation") {
+        // Skip — we'll add relation data from relationValues state below
+        continue;
       } else {
-        const stringValue = value.toString();
-        const field = collection.fields[key];
-        if (field?.type === "boolean") {
-          data[key] = stringValue === "on";
-        } else {
-          data[key] = stringValue;
-        }
+        data[key] = value.toString();
+      }
+    }
+
+    // Inject relation values from state
+    for (const [key, val] of Object.entries(relationValues)) {
+      if (collection.fields[key]) {
+        data[key] = val;
       }
     }
 
@@ -210,7 +234,7 @@ export function FormEngine({ collection, record, isNew }: FormEngineProps) {
       }
       setSubmitError(err.error ?? "An error occurred");
     }
-  }, [collection, isNew, record?.id, richTextValues]);
+  }, [collection, isNew, record?.id, richTextValues, relationValues]);
 
   const handleRichTextChange = useCallback((name: string, value: string) => {
     setRichTextValues((prev) => {
@@ -224,16 +248,23 @@ export function FormEngine({ collection, record, isNew }: FormEngineProps) {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="adminforge-form">
       {submitError && <div className="adminforge-form-error">{submitError}</div>}
-      {Object.entries(collection.fields).map(([name, field]) => (
-        <FieldRenderer
-          key={name}
-          name={name}
-          field={field}
-          value={record?.[name]}
-          onChange={(val) => handleRichTextChange(name, val)}
-          error={fieldErrors[name]}
-        />
-      ))}
+      {Object.entries(collection.fields).map(([name, field]) => {
+        // For relation fields, prefer the local state (normalized IDs) over raw record data
+        const fieldValue = field.type === "relation" && relationValues[name] !== undefined
+          ? relationValues[name]
+          : record?.[name];
+        return (
+          <FieldRenderer
+            key={name}
+            name={name}
+            field={field}
+            value={fieldValue}
+            onChange={(val) => handleRichTextChange(name, val)}
+            onRelationChange={(val) => setRelationValues((prev) => ({ ...prev, [name]: val }))}
+            error={fieldErrors[name]}
+          />
+        );
+      })}
       <div className="adminforge-form-actions">
         <button type="submit" className="adminforge-btn adminforge-btn-primary">
           {isNew ? "Create" : "Save"}
