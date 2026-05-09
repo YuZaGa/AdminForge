@@ -1,12 +1,14 @@
 import type { ZodSchema } from "zod";
 
+export type RelationType = "many-to-one" | "one-to-many" | "many-to-many";
+
 export interface FieldDBMapping {
   type: string;
   nullable?: boolean;
   unique?: boolean;
   default?: unknown;
   references?: { model: string; field: string };
-  relationType?: "many-to-one" | "one-to-many" | "many-to-many";
+  relationType?: RelationType;
 }
 
 export interface FieldUI {
@@ -24,7 +26,9 @@ export interface FieldDefinition {
   db: FieldDBMapping;
   ui: FieldUI;
   validation: ZodSchema;
+  meta?: FieldMeta;
   hooks?: FieldHooks;
+  access?: AccessConfig;
 }
 
 export interface FieldOptions {
@@ -34,6 +38,18 @@ export interface FieldOptions {
   label?: string;
   hidden?: boolean;
   readOnly?: boolean;
+  description?: string;
+  access?: AccessConfig;
+}
+
+export interface FieldMeta {
+  required: boolean;
+  unique: boolean;
+  default?: unknown;
+  label?: string;
+  hidden?: boolean;
+  readOnly?: boolean;
+  description?: string;
 }
 
 export interface TextOptions extends FieldOptions {}
@@ -46,7 +62,7 @@ export interface SlugOptions extends FieldOptions {
 
 export interface RelationOptions extends FieldOptions {
   to: string;
-  type: "many-to-one" | "one-to-many" | "many-to-many";
+  type: RelationType;
 }
 
 export interface DateOptions extends FieldOptions {
@@ -55,6 +71,13 @@ export interface DateOptions extends FieldOptions {
 }
 
 export interface ImageOptions extends FieldOptions {}
+
+export interface AccessConfig {
+  read?: string[];
+  create?: string[];
+  update?: string[];
+  delete?: string[];
+}
 
 export interface CollectionHooks {
   beforeCreate?: (ctx: { data: Record<string, unknown> }) => Record<string, unknown> | Promise<Record<string, unknown>>;
@@ -70,11 +93,13 @@ export interface CollectionDefinition {
   label?: string;
   fields: Record<string, FieldDefinition>;
   hooks?: CollectionHooks;
+  access?: AccessConfig;
 }
 
 export interface AuthConfig {
   enabled: boolean;
   provider?: "credentials";
+  roles?: Record<string, { label?: string; parent?: string }>;
 }
 
 export interface AdminForgeConfig {

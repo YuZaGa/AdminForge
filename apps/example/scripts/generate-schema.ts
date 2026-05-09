@@ -8,8 +8,9 @@ const schemaPath = resolve(process.cwd(), "prisma/schema.prisma");
 let provider = "sqlite";
 if (existsSync(schemaPath)) {
   const existing = readFileSync(schemaPath, "utf-8");
-  const match = existing.match(/provider\s*=\s*"(.*)"/);
-  if (match) {
+  const match = existing.match(/datasource db \{[^}]*provider\s*=\s*"(.*)"/);
+  const knownProviders = new Set(["sqlite", "postgresql", "mysql", "sqlserver", "cockroachdb", "mongodb"]);
+  if (match && knownProviders.has(match[1])) {
     provider = match[1];
   }
 }

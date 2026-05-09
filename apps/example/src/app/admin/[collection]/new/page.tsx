@@ -7,13 +7,12 @@ import { useConfig } from "../../../../lib/use-config";
 
 export default function NewRecord({ params }: { params: Promise<{ collection: string }> }) {
   const { collection: collectionName } = use(params);
-  const { config, loading } = useConfig();
-
+  const { config, session, loading } = useConfig();
   if (loading) return <div className="adminforge-loading">Loading...</div>;
 
   const cfg = config as unknown as AdminForgeConfig;
   const collection = cfg.collections.find((c) => c.name === collectionName);
   if (!collection) return <div>Collection not found</div>;
 
-  return <CollectionFormPage config={cfg} collection={collection} record={null} isNew={true} />;
+  return <CollectionFormPage config={cfg} collection={collection} record={null} isNew={true} role={(session as { role?: string })?.role} />;
 }

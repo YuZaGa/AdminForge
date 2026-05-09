@@ -43,7 +43,7 @@ export function generatePrismaSchema(
 
     for (const [name, field] of Object.entries(collection.fields)) {
       if (field.type === "relation") {
-        const targetModel = (field.ui.props?.to as string) || (field.db.references?.model as string) || "String";
+        const targetModel = (field.db.references?.model as string) || (field.ui.props?.to as string) || "String";
         const relType = field.db.relationType || "many-to-one";
 
         if (!inverseRelations[targetModel]) inverseRelations[targetModel] = [];
@@ -58,7 +58,7 @@ export function generatePrismaSchema(
         } else {
           // many-to-one (default)
           block.push(`  ${name}Id String${field.db.nullable ? "?" : ""}`);
-          block.push(`  ${name}   ${targetModel} @relation(fields: [${name}Id], references: [id])`);
+          block.push(`  ${name}   ${targetModel}${field.db.nullable ? "?" : ""} @relation(fields: [${name}Id], references: [id])`);
           inverseRelations[targetModel].push(`  adminforge_inverse_${modelName}_${name} ${modelName}[]`);
         }
       } else {

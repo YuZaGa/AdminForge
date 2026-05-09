@@ -64,20 +64,26 @@ export function createDbClient(config: AdminForgeConfig): DbClient {
     for (const [key, value] of Object.entries(transformed)) {
       const field = collDef.fields[key];
       if (field?.type === "relation") {
+        const relationType = field.db.relationType ?? "many-to-one";
+        const isMulti = relationType === "many-to-many" || relationType === "one-to-many";
+
         if (Array.isArray(value)) {
           // Many-to-many or one-to-many: array of IDs
+          const ids = value.filter((id): id is string => typeof id === "string" && id.length > 0);
           if (isUpdate) {
-            transformed[key] = { set: value.map((id: string) => ({ id })) };
+            transformed[key] = { set: ids.map((id) => ({ id })) };
           } else {
-            transformed[key] = { connect: value.map((id: string) => ({ id })) };
+            transformed[key] = { connect: ids.map((id) => ({ id })) };
           }
-        } else if (typeof value === "string" && value !== "") {
+        } else if (!isMulti && typeof value === "string" && value !== "") {
           // Many-to-one: single ID string
           transformed[key] = { connect: { id: value } };
           // Remove the raw field and set the FK field instead for many-to-one
           // Actually Prisma accepts both connect syntax and raw FK, but connect is cleaner
-        } else if (value === null || value === "") {
+        } else if ((value === null || value === "") && isUpdate) {
           transformed[key] = { disconnect: true };
+        } else if (value === null || value === "") {
+          delete transformed[key];
         }
       }
     }

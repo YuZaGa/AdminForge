@@ -1,8 +1,8 @@
-import type { AdminForgeConfig, CollectionDefinition } from "../types/index.js";
+import type { AdminForgeConfig, CollectionDefinition, AuthConfig } from "../types/index.js";
 
 export function defineConfig(config: {
   collections: CollectionDefinition[];
-  auth?: { enabled: boolean };
+  auth?: AuthConfig;
 }): AdminForgeConfig {
   return {
     collections: config.collections,

@@ -1,8 +1,10 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@adminforge.com";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
+const USERS: Record<string, { password: string; role: string }> = {
+  admin: { password: process.env.ADMIN_PASSWORD ?? "admin123", role: "admin" },
+  editor: { password: process.env.EDITOR_PASSWORD ?? "editor123", role: "editor" },
+};
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -14,21 +16,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorize: async (credentials) => {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
+        if (!email || !password) return null;
 
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-          return { id: "1", email, name: "Admin" };
+        const userKey = email.split("@")[0];
+        const user = USERS[userKey];
+        if (user && password === user.password) {
+          return { id: userKey, email, name: userKey, role: user.role };
         }
-
         return null;
       },
     }),
   ],
-  pages: {
-    signIn: "/admin/login",
-  },
   callbacks: {
-    authorized: async ({ auth: session }) => {
+    jwt: ({ token, user }) => {
+      if (user) (token as Record<string, unknown>).role = (user as Record<string, unknown>).role;
+      return token;
+    },
+    session: ({ session, token }) => {
+      (session as unknown as Record<string, unknown>).role = token.role;
+      return session;
+    },
+    authorized: ({ auth: session }) => {
       return !!session?.user;
     },
   },
+  pages: { signIn: "/admin/login" },
 });

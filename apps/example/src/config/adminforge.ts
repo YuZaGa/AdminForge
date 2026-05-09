@@ -5,27 +5,21 @@ export const config = defineConfig({
     collection({
       name: "posts",
       label: "Posts",
+      access: { create: ["admin"], update: ["admin", "editor"], delete: ["admin"] },
       fields: {
         title: fields.text({ required: true }),
         slug: fields.slug({ from: "title", unique: true }),
         content: fields.richText(),
-        published: fields.boolean({ default: false }),
+        published: fields.boolean({ default: false, access: { update: ["admin"] } }),
         coverImage: fields.image(),
+        category: fields.relation({ to: "categories", type: "many-to-one", label: "Category" }),
         tags: fields.relation({ to: "tags", type: "many-to-many", label: "Tags" }),
-      },
-      hooks: {
-        beforeCreate: async ({ data }) => {
-          if (!data.slug && data.title) {
-            const title = data.title as string;
-            data.slug = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-          }
-          return data;
-        },
       },
     }),
     collection({
       name: "categories",
       label: "Categories",
+      access: { read: ["admin"] },
       fields: {
         name: fields.text({ required: true }),
       },
@@ -33,6 +27,7 @@ export const config = defineConfig({
     collection({
       name: "tags",
       label: "Tags",
+      access: { read: ["admin", "editor"], create: ["admin"], update: ["admin"], delete: ["admin"] },
       fields: {
         name: fields.text({ required: true }),
       },
@@ -40,5 +35,9 @@ export const config = defineConfig({
   ],
   auth: {
     enabled: true,
+    roles: {
+      admin: { label: "Administrator" },
+      editor: { label: "Editor" },
+    },
   },
 });

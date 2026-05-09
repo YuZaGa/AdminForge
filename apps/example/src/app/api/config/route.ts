@@ -6,6 +6,7 @@ function serializeConfig(cfg: typeof config) {
     collections: cfg.collections.map((c) => ({
       name: c.name,
       label: c.label,
+      access: c.access,
       fields: Object.fromEntries(
         Object.entries(c.fields).map(([name, field]) => [
           name,
@@ -13,6 +14,8 @@ function serializeConfig(cfg: typeof config) {
             type: field.type,
             db: field.db,
             ui: field.ui,
+            meta: field.meta,
+            access: field.access,
           },
         ])
       ),
@@ -21,5 +24,6 @@ function serializeConfig(cfg: typeof config) {
 }
 
 export async function GET() {
-  return Response.json(serializeConfig(config));
+  const serialized = serializeConfig(config);
+  return Response.json(serialized);
 }

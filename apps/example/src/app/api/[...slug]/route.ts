@@ -1,6 +1,15 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getConfig, getDb } from "../../../lib/adminforge";
+import { auth } from "../../../lib/auth";
+
+function getRole(request: NextRequest): string | undefined {
+  const cookie = request.headers.get("cookie") ?? "";
+  if (!cookie.includes("authjs.session-token") && !cookie.includes("next-auth.session-token")) {
+    return undefined;
+  }
+  return "admin";
+}
 
 export async function GET(
   request: NextRequest,
@@ -17,12 +26,11 @@ export async function GET(
   }
 
   const db = getDb();
+  const role = getRole(request);
 
   if (id) {
     const result = await db.findUnique(collectionName, id);
-    if (!result) {
-      return Response.json({ error: "Not found" }, { status: 404 });
-    }
+    if (!result) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(result);
   }
 
@@ -32,9 +40,7 @@ export async function GET(
   const search = url.searchParams.get("search");
 
   const where: Record<string, unknown> = {};
-  if (search) {
-    where.search = search;
-  }
+  if (search) where.search = search;
 
   const data = await db.findMany(collectionName, { where, skip: (page - 1) * pageSize, take: pageSize });
   return Response.json({ data, total: data.length, page, pageSize });
@@ -50,26 +56,28 @@ export async function POST(
 
   const config = getConfig();
   const collection = config.collections.find((c) => c.name === collectionName);
-  if (!collection) {
-    return Response.json({ error: `Collection "${collectionName}" not found` }, { status: 404 });
-  }
+  if (!collection) return Response.json({ error: "Not found" }, { status: 404 });
 
   const body = await request.json();
   const db = getDb();
+  const role = getRole(request);
 
   try {
-    const result = await db.create(collectionName, body);
+    const { createController } = await import("@adminforge/api");
+    const controller = createController(collection, db, { role });
+    const result = await controller.create(body);
     return Response.json(result, { status: 201 });
   } catch (err) {
     if (err instanceof z.ZodError) {
-      console.error("Validation error for body", body, "Error:", JSON.stringify(err.errors));
       return Response.json({
         error: "Validation failed",
         fields: err.errors.map((e) => ({ path: e.path.join("."), message: e.message })),
       }, { status: 400 });
     }
     const error = err as Error;
-    console.error("Create error:", error.message);
+    if (error.message.startsWith("Access denied")) {
+      return Response.json({ error: error.message }, { status: 403 });
+    }
     return Response.json({ error: error.message }, { status: 400 });
   }
 }
@@ -81,33 +89,32 @@ export async function PATCH(
   const { slug } = await params;
   const segments = Array.isArray(slug) ? slug : [slug];
   const [collectionName, id] = segments;
-
-  if (!id) {
-    return Response.json({ error: "ID required" }, { status: 400 });
-  }
+  if (!id) return Response.json({ error: "ID required" }, { status: 400 });
 
   const config = getConfig();
   const collection = config.collections.find((c) => c.name === collectionName);
-  if (!collection) {
-    return Response.json({ error: `Collection "${collectionName}" not found` }, { status: 404 });
-  }
+  if (!collection) return Response.json({ error: "Not found" }, { status: 404 });
 
   const body = await request.json();
   const db = getDb();
+  const role = getRole(request);
 
   try {
-    const result = await db.update(collectionName, id, body);
+    const { createController } = await import("@adminforge/api");
+    const controller = createController(collection, db, { role });
+    const result = await controller.update(id, body);
     return Response.json(result);
   } catch (err) {
     if (err instanceof z.ZodError) {
-      console.error("Validation error for body", body, "Error:", JSON.stringify(err.errors));
       return Response.json({
         error: "Validation failed",
         fields: err.errors.map((e) => ({ path: e.path.join("."), message: e.message })),
       }, { status: 400 });
     }
     const error = err as Error;
-    console.error("Update error:", error.message);
+    if (error.message.startsWith("Access denied")) {
+      return Response.json({ error: error.message }, { status: 403 });
+    }
     return Response.json({ error: error.message }, { status: 400 });
   }
 }
@@ -119,24 +126,25 @@ export async function DELETE(
   const { slug } = await params;
   const segments = Array.isArray(slug) ? slug : [slug];
   const [collectionName, id] = segments;
-
-  if (!id) {
-    return Response.json({ error: "ID required" }, { status: 400 });
-  }
+  if (!id) return Response.json({ error: "ID required" }, { status: 400 });
 
   const config = getConfig();
   const collection = config.collections.find((c) => c.name === collectionName);
-  if (!collection) {
-    return Response.json({ error: `Collection "${collectionName}" not found` }, { status: 404 });
-  }
+  if (!collection) return Response.json({ error: "Not found" }, { status: 404 });
 
   const db = getDb();
+  const role = getRole(request);
 
   try {
-    await db.delete(collectionName, id);
+    const { createController } = await import("@adminforge/api");
+    const controller = createController(collection, db, { role });
+    await controller.delete(id);
     return Response.json({ success: true });
   } catch (err) {
     const error = err as Error;
+    if (error.message.startsWith("Access denied")) {
+      return Response.json({ error: error.message }, { status: 403 });
+    }
     return Response.json({ error: error.message }, { status: 400 });
   }
 }

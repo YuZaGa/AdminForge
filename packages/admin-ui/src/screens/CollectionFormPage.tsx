@@ -10,26 +10,18 @@ interface CollectionFormPageProps {
   collection: CollectionDefinition;
   record?: Record<string, unknown> | null;
   isNew: boolean;
+  role?: string;
 }
 
-export function CollectionFormPage({ config, collection, record, isNew }: CollectionFormPageProps) {
+export function CollectionFormPage({ config, collection, record, isNew, role }: CollectionFormPageProps) {
   return (
-    <AdminLayout config={config} currentPath={`/admin/${collection.name}`}>
+    <AdminLayout config={config} currentPath={`/admin/${collection.name}`} role={role}>
       <div className="adminforge-collection-page">
         <div className="adminforge-page-header">
           <h2>{isNew ? `Create ${collection.label}` : `Edit ${collection.label}`}</h2>
-          <Link
-            href={`/admin/${collection.name}`}
-            className="adminforge-btn adminforge-btn-secondary"
-          >
-            Back
-          </Link>
+          <Link href={`/admin/${collection.name}`} className="adminforge-btn adminforge-btn-secondary">Back</Link>
         </div>
-        <FormEngine
-          collection={collection}
-          record={record}
-          isNew={isNew}
-        />
+        <FormEngine collection={collection} record={record} isNew={isNew} role={role} />
       </div>
     </AdminLayout>
   );

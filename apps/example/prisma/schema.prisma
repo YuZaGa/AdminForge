@@ -16,6 +16,8 @@ model posts {
   content String?
   published Boolean? @default(false)
   coverImage String?
+  categoryId String?
+  category   categories? @relation(fields: [categoryId], references: [id])
   tags tags[]
 }
 
@@ -24,6 +26,9 @@ model categories {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   name String
+
+  // Auto-generated inverse relations
+  adminforge_inverse_posts_category posts[]
 }
 
 model tags {
