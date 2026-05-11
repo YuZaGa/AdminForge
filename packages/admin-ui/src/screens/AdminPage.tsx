@@ -1,5 +1,5 @@
 "use client";
-
+import { useState, useEffect } from "react";
 import type { AdminForgeConfig } from "@adminforge/core";
 import { AdminLayout } from "../components/AdminLayout.js";
 import Link from "next/link";
@@ -16,6 +16,44 @@ const iconMap: Record<string, string> = {
   users: "person",
 };
 
+function formatRelativeTime(date: Date) {
+  const diff = Date.now() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (isNaN(date.getTime())) return "Invalid date";
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+}
+
+function CollectionActivity({ name }: { name: string }) {
+  const [lastUpdate, setLastUpdate] = useState<string>("Loading...");
+
+  useEffect(() => {
+    fetch(`/api/${name}?pageSize=1`)
+      .then(res => res.json())
+      .then(result => {
+        const item = result.data?.[0];
+        if (item) {
+          const dateStr = item.updatedAt || item.updated_at || item.createdAt || item.created_at;
+          if (dateStr) {
+            setLastUpdate(formatRelativeTime(new Date(dateStr)));
+          } else {
+            setLastUpdate("No date info");
+          }
+        } else {
+          setLastUpdate("No activity");
+        }
+      })
+      .catch(() => setLastUpdate("Unknown"));
+  }, [name]);
+
+  return <span>{lastUpdate}</span>;
+}
+
 export function AdminPage({ config, role }: AdminPageProps) {
   return (
     <AdminLayout config={config} currentPath="/admin" role={role}>
@@ -29,23 +67,13 @@ export function AdminPage({ config, role }: AdminPageProps) {
         <div className="adminforge-table-wrapper">
           <div style={{ padding: '24px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Registered Collections</h3>
-            <div style={{ position: 'relative' }}>
-              <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)', fontSize: '20px' }}>search</span>
-              <input 
-                type="text" 
-                className="adminforge-input" 
-                placeholder="Search collections..." 
-                style={{ paddingLeft: '40px', width: '260px', height: '40px' }}
-              />
-            </div>
           </div>
           <table className="adminforge-table">
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Fields</th>
-                <th>Status</th>
-                <th>Last Updated</th>
+                <th>Last Activity</th>
               </tr>
             </thead>
             <tbody>
@@ -65,13 +93,9 @@ export function AdminPage({ config, role }: AdminPageProps) {
                           {Object.keys(collection.fields).length} fields
                         </span>
                       </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
-                          <span style={{ fontSize: '13px' }}>Active</span>
-                        </div>
+                      <td style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>
+                        <CollectionActivity name={collection.name} />
                       </td>
-                      <td style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>2 hours ago</td>
                     </tr>
                   );
                 })}
