@@ -59,8 +59,15 @@ export function AdminPage({ config, role }: AdminPageProps) {
     <AdminLayout config={config} currentPath="/admin" role={role}>
       <div className="adminforge-dashboard">
         <div className="mb-10">
-          <h2 className="adminforge-display-title">Collection Registry</h2>
-          <p className="adminforge-display-subtitle">Overview of all data collections in the system.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+            <h2 className="adminforge-display-title" style={{ marginBottom: 0 }}>Collection Registry</h2>
+            <span className="adminforge-badge" style={{ background: '#f8fafc', color: '#64748b', borderColor: '#e2e8f0', fontSize: '11px', fontWeight: 600 }}>
+              defined in adminforge.ts
+            </span>
+          </div>
+          <p className="adminforge-display-subtitle">
+            Overview of all data collections in the system.
+          </p>
           <br></br>
         </div>
 
@@ -74,6 +81,7 @@ export function AdminPage({ config, role }: AdminPageProps) {
                 <th>Name</th>
                 <th>Fields</th>
                 <th>Last Activity</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -95,6 +103,11 @@ export function AdminPage({ config, role }: AdminPageProps) {
                       </td>
                       <td style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>
                         <CollectionActivity name={collection.name} />
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <Link href={`/admin/${collection.name}/schema`} className="adminforge-btn-icon" title="View Schema">
+                          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>visibility</span>
+                        </Link>
                       </td>
                     </tr>
                   );
