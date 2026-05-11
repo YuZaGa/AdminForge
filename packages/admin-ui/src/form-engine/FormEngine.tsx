@@ -190,6 +190,29 @@ export function FormEngine({ collection, record, isNew, role }: FormEngineProps)
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="adminforge-form">
       {submitError && <div className="adminforge-form-error">{submitError}</div>}
+      
+      {!isNew && !!record?.id && (
+        <div className="adminforge-field">
+          <label>Internal ID</label>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input 
+              type="text" 
+              className="adminforge-input" 
+              value={String(record.id)} 
+              readOnly 
+              style={{ background: '#f8fafc', color: '#64748b', fontFamily: 'monospace' }} 
+            />
+            <button 
+              type="button" 
+              className="adminforge-btn-icon" 
+              title="Copy ID"
+              onClick={() => navigator.clipboard.writeText(String(record.id))}
+            >
+              <span className="material-symbols-outlined">content_copy</span>
+            </button>
+          </div>
+        </div>
+      )}
       {Object.entries(collection.fields).map(([name, field]) => {
         const fv = field.type === "relation" && relationValues[name] !== undefined ? relationValues[name] : record?.[name];
         return (

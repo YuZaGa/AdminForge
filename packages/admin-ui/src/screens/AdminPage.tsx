@@ -20,15 +20,10 @@ export function AdminPage({ config, role }: AdminPageProps) {
   return (
     <AdminLayout config={config} currentPath="/admin" role={role}>
       <div className="adminforge-dashboard">
-        <div className="mb-10 flex justify-between items-end">
-          <div>
-            <h2 className="adminforge-display-title">Model Registry</h2>
-            <p className="adminforge-display-subtitle">Define and manage your system's data architecture.</p>
-          </div>
-          <button className="adminforge-btn adminforge-btn-secondary" style={{ padding: '12px 24px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>upload_file</span>
-            Import Schema
-          </button>
+        <div className="mb-10">
+          <h2 className="adminforge-display-title">Collection Registry</h2>
+          <p className="adminforge-display-subtitle">Overview of all data collections in the system.</p>
+          <br></br>
         </div>
 
         <div className="adminforge-table-wrapper">
@@ -39,7 +34,7 @@ export function AdminPage({ config, role }: AdminPageProps) {
               <input 
                 type="text" 
                 className="adminforge-input" 
-                placeholder="Search models..." 
+                placeholder="Search collections..." 
                 style={{ paddingLeft: '40px', width: '260px', height: '40px' }}
               />
             </div>
@@ -51,7 +46,6 @@ export function AdminPage({ config, role }: AdminPageProps) {
                 <th>Fields</th>
                 <th>Status</th>
                 <th>Last Updated</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -61,15 +55,10 @@ export function AdminPage({ config, role }: AdminPageProps) {
                   return !a?.read || !role || a.read.includes(role);
                 })
                 .map((collection) => {
-                  const icon = iconMap[collection.name] || "database";
                   return (
                     <tr key={collection.name}>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <span className="material-symbols-outlined" style={{ color: 'var(--color-primary)' }}>{icon}</span>
-                          <span style={{ fontWeight: 600 }}>{collection.label}</span>
-                          <span className="adminforge-badge">Collection</span>
-                        </div>
+                        <span style={{ fontWeight: 600 }}>{collection.label}</span>
                       </td>
                       <td>
                         <span className="adminforge-badge adminforge-badge-secondary">
@@ -83,11 +72,6 @@ export function AdminPage({ config, role }: AdminPageProps) {
                         </div>
                       </td>
                       <td style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>2 hours ago</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <Link href={`/admin/${collection.name}`} className="adminforge-btn-text">
-                          Edit Schema
-                        </Link>
-                      </td>
                     </tr>
                   );
                 })}
@@ -95,12 +79,8 @@ export function AdminPage({ config, role }: AdminPageProps) {
           </table>
           <div style={{ padding: '24px', background: '#f8fafc', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-              Showing {config.collections.length} of {config.collections.length} registered models
+              Showing {config.collections.length} of {config.collections.length} registered collections
             </p>
-            <button className="adminforge-btn-text" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_circle</span>
-              Register New Collection
-            </button>
           </div>
         </div>
       </div>

@@ -213,6 +213,7 @@ a { color: inherit; text-decoration: none; }
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .adminforge-topbar {
@@ -233,6 +234,8 @@ a { color: inherit; text-decoration: none; }
 .adminforge-main-canvas {
   padding: 32px;
   flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .adminforge-display-title {
@@ -263,6 +266,23 @@ a { color: inherit; text-decoration: none; }
   background: #f0f9ff;
   color: #0369a1;
   border-color: #bae6fd;
+}
+
+.adminforge-id-badge {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  background: #f8fafc;
+  color: #64748b;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  cursor: help;
+  transition: all 0.2s;
+}
+
+.adminforge-id-badge:hover {
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .adminforge-btn-text {
@@ -339,8 +359,44 @@ a { color: inherit; text-decoration: none; }
   color: var(--color-text);
 }
 
+.adminforge-btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+
 .adminforge-btn-block {
   width: 100%;
+}
+
+.adminforge-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  text-decoration: none;
+}
+
+.adminforge-btn-icon:hover {
+  background: #f1f5f9;
+  color: var(--color-primary);
+  transform: scale(1.1);
+}
+
+.adminforge-btn-icon-danger {
+  color: var(--color-danger);
+}
+
+.adminforge-btn-icon-danger:hover {
+  background: #fff1f2;
+  color: var(--color-danger);
 }
 
 /* Table */
@@ -349,7 +405,15 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.adminforge-collection-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 100%;
 }
 
 .adminforge-table {

@@ -31,23 +31,48 @@ export function TableEngine({ collection, data, basePath, role }: TableEnginePro
         <thead>
           <tr>
             {displayKeys.map((key) => <th key={key}>{key}</th>)}
-            <th>Actions</th>
+            <th style={{ textAlign: 'right', paddingRight: '20px' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {records.map((record) => (
             <tr key={record.id as string}>
-              {displayKeys.map((key) => <td key={key}>{String(record[key] ?? "")}</td>)}
-              <td>
-                <div style={{ display: 'flex', gap: '8px' }}>
+              {displayKeys.map((key) => (
+                <td key={key}>
+                  {key === 'id' ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="adminforge-id-badge" title={String(record[key])}>
+                        {String(record[key]).substring(0, 8)}...
+                      </span>
+                      <button 
+                        type="button"
+                        className="adminforge-btn-icon" 
+                        style={{ width: '24px', height: '24px', minWidth: '24px' }}
+                        title="Copy ID"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(String(record[key]));
+                        }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>content_copy</span>
+                      </button>
+                    </div>
+                  ) : (
+                    String(record[key] ?? "")
+                  )}
+                </td>
+              ))}
+              <td style={{ textAlign: 'right', paddingRight: '20px' }}>
+                <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
                   {canUpdate && (
-                    <Link href={`${basePath}/${record.id}`} className="adminforge-btn adminforge-btn-secondary">
-                      Edit
+                    <Link href={`${basePath}/${record.id}`} className="adminforge-btn-icon" title="Edit">
+                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>edit</span>
                     </Link>
                   )}
                   {canDelete && (
                     <button
-                      className="adminforge-btn adminforge-btn-danger"
+                      className="adminforge-btn-icon adminforge-btn-icon-danger"
+                      title="Delete"
                       onClick={async () => {
                         if (confirm("Are you sure you want to delete this item?")) {
                           const res = await fetch(`/api/${collection.name}/${record.id}`, { method: 'DELETE' });
@@ -60,7 +85,7 @@ export function TableEngine({ collection, data, basePath, role }: TableEnginePro
                         }
                       }}
                     >
-                      Delete
+                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>delete</span>
                     </button>
                   )}
                 </div>

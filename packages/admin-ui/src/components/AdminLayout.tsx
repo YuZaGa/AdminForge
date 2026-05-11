@@ -54,12 +54,6 @@ export function AdminLayout({ config, children, currentPath, role }: AdminLayout
             );
           })}
         </ul>
-        <div className="adminforge-sidebar-footer">
-          <button className="adminforge-sidebar-btn">
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-            New Model
-          </button>
-        </div>
       </nav>
       <main className="adminforge-content">
         <header className="adminforge-topbar">
