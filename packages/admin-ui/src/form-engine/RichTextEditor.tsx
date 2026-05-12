@@ -15,6 +15,9 @@ import TaskItem from "@tiptap/extension-task-item";
 import HorizontalRule from "@tiptap/extension-horizontal-rule";
 import Typography from "@tiptap/extension-typography";
 import BubbleMenuExtension from "@tiptap/extension-bubble-menu";
+import Image from "@tiptap/extension-image";
+import { EditorView } from "@tiptap/pm/view";
+import { Slice } from "@tiptap/pm/model";
 import { useEffect, useState, useCallback } from "react";
 
 interface RichTextEditorProps {
@@ -62,6 +65,34 @@ function Toolbar({ editor }: { editor: Editor | null }) {
     }
 
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }, [editor]);
+
+  const addImage = useCallback(() => {
+    if (!editor) return;
+    
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
+        editor.chain().focus().setImage({ src: data.url }).run();
+      } catch (err) {
+        alert('Failed to upload image');
+      }
+    };
+    input.click();
   }, [editor]);
 
   if (!editor) return null;
@@ -155,6 +186,11 @@ function Toolbar({ editor }: { editor: Editor | null }) {
           isActive={editor.isActive("link")}
           icon="link" 
           title="Link" 
+        />
+        <MenuButton 
+          onClick={addImage} 
+          icon="add_photo_alternate" 
+          title="Add Image" 
         />
         <MenuButton 
           onClick={() => editor.chain().focus().toggleSubscript().run()} 
@@ -261,7 +297,7 @@ export function RichTextEditor({ name, value = "", onChange }: RichTextEditorPro
       }),
       Underline,
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ['heading', 'paragraph', 'image'],
       }),
       Placeholder.configure({
         placeholder: 'Write something amazing...',
@@ -276,9 +312,85 @@ export function RichTextEditor({ name, value = "", onChange }: RichTextEditorPro
       HorizontalRule,
       Typography,
       BubbleMenuExtension,
+      Image.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            width: {
+              default: '100%',
+              renderHTML: attributes => {
+                return {
+                  style: `width: ${attributes.width}; height: auto;`,
+                }
+              }
+            },
+            textAlign: {
+              default: 'left',
+              parseHTML: element => element.style.textAlign || element.getAttribute('data-text-align'),
+              renderHTML: attributes => {
+                return {
+                  'data-align': attributes.textAlign,
+                }
+              }
+            }
+          }
+        }
+      }).configure({
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'adminforge-editor-image',
+        },
+      }),
     ],
     content: value,
     immediatelyRender: false,
+    editorProps: {
+      handleDrop: (view: EditorView, event: DragEvent, slice: Slice, moved: boolean) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith('image/')) {
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch('/api/upload', { method: 'POST', body: formData })
+              .then(res => res.json())
+              .then(data => {
+                if (data.url) {
+                  const { schema } = view.state;
+                  const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
+                  const node = schema.nodes.image.create({ src: data.url });
+                  const transaction = view.state.tr.insert(coordinates?.pos ?? 0, node);
+                  view.dispatch(transaction);
+                }
+              })
+              .catch(() => alert('Upload failed'));
+            return true;
+          }
+        }
+        return false;
+      },
+      handlePaste: (view: EditorView, event: ClipboardEvent) => {
+        if (event.clipboardData && event.clipboardData.files && event.clipboardData.files[0]) {
+          const file = event.clipboardData.files[0];
+          if (file.type.startsWith('image/')) {
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch('/api/upload', { method: 'POST', body: formData })
+              .then(res => res.json())
+              .then(data => {
+                if (data.url) {
+                  const { schema } = view.state;
+                  const node = schema.nodes.image.create({ src: data.url });
+                  const transaction = view.state.tr.replaceSelectionWith(node);
+                  view.dispatch(transaction);
+                }
+              })
+              .catch(() => alert('Upload failed'));
+            return true;
+          }
+        }
+        return false;
+      },
+    },
     onUpdate: ({ editor }: { editor: Editor }) => {
       onChange(editor.getHTML());
     },
@@ -299,38 +411,108 @@ export function RichTextEditor({ name, value = "", onChange }: RichTextEditorPro
       <Toolbar editor={editor} />
       
       {editor && (
-        <BubbleMenu editor={editor} options={{ duration: 100 } as any}>
-          <div className="adminforge-editor-bubble-menu">
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              className={editor.isActive('bold') ? 'active' : ''}
-            >
-              <span className="material-symbols-outlined">format_bold</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={editor.isActive('italic') ? 'active' : ''}
-            >
-              <span className="material-symbols-outlined">format_italic</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              className={editor.isActive('strike') ? 'active' : ''}
-            >
-              <span className="material-symbols-outlined">format_strikethrough</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleHighlight().run()}
-              className={editor.isActive('highlight') ? 'active' : ''}
-            >
-              <span className="material-symbols-outlined">format_ink_highlighter</span>
-            </button>
+        <>
+      {editor && (
+        <BubbleMenu 
+          editor={editor} 
+          shouldShow={({ editor, state }) => {
+            // Show if image is active or if we have a node selection on an image
+            const isImage = editor.isActive('image') || (state.selection.content().content.firstChild?.type.name === 'image');
+            return isImage || !state.selection.empty;
+          }}
+          options={{ duration: 100, zIndex: 9999 } as any}
+        >
+          <div className="adminforge-editor-bubble-menu" style={{ zIndex: 10000 }}>
+            {editor.isActive('image') ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                  className={editor.isActive({ textAlign: 'left' }) ? 'active' : ''}
+                >
+                  <span className="material-symbols-outlined">format_align_left</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                  className={editor.isActive({ textAlign: 'center' }) ? 'active' : ''}
+                >
+                  <span className="material-symbols-outlined">format_align_center</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                  className={editor.isActive({ textAlign: 'right' }) ? 'active' : ''}
+                >
+                  <span className="material-symbols-outlined">format_align_right</span>
+                </button>
+                <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)', margin: '4px 2px' }} />
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().updateAttributes('image', { width: 'calc(25% - 1rem)' }).run()}
+                  style={{ fontSize: '11px', fontWeight: 'bold' }}
+                >
+                  25%
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().updateAttributes('image', { width: 'calc(50% - 1rem)' }).run()}
+                  style={{ fontSize: '11px', fontWeight: 'bold' }}
+                >
+                  50%
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().updateAttributes('image', { width: '100%' }).run()}
+                  style={{ fontSize: '11px', fontWeight: 'bold' }}
+                >
+                  100%
+                </button>
+                <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)', margin: '4px 2px' }} />
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().deleteSelection().run()}
+                  style={{ color: '#f87171' }}
+                >
+                  <span className="material-symbols-outlined">delete</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  className={editor.isActive('bold') ? 'active' : ''}
+                >
+                  <span className="material-symbols-outlined">format_bold</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  className={editor.isActive('italic') ? 'active' : ''}
+                >
+                  <span className="material-symbols-outlined">format_italic</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleStrike().run()}
+                  className={editor.isActive('strike') ? 'active' : ''}
+                >
+                  <span className="material-symbols-outlined">format_strikethrough</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleHighlight().run()}
+                  className={editor.isActive('highlight') ? 'active' : ''}
+                >
+                  <span className="material-symbols-outlined">format_ink_highlighter</span>
+                </button>
+              </>
+            )}
           </div>
         </BubbleMenu>
+      )}
+        </>
       )}
 
       <div className="adminforge-editor-content">
@@ -476,6 +658,49 @@ export function RichTextEditor({ name, value = "", onChange }: RichTextEditorPro
 
         ul[data-type="taskList"] li > div {
           flex: 1;
+        }
+
+        .adminforge-editor-image {
+          max-width: 100% !important;
+          height: auto !important;
+          border-radius: 8px;
+          margin: 0.5rem;
+          display: inline-block;
+          vertical-align: middle;
+          transition: all 0.2s;
+        }
+
+        /* Float logic for text wrapping and alignment */
+        .adminforge-editor-image[data-align="left"] {
+          float: left;
+          margin-left: 0;
+          margin-right: 1.5rem;
+          display: block; /* block + float is standard */
+        }
+        
+        .adminforge-editor-image[data-align="right"] {
+          float: right;
+          margin-right: 0;
+          margin-left: 1.5rem;
+          display: block;
+        }
+        
+        .adminforge-editor-image[data-align="center"] {
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+          float: none;
+        }
+
+        /* Clearfix for the parent paragraph to contain floats */
+        .ProseMirror p::after {
+          content: "";
+          display: table;
+          clear: both;
+        }
+
+        .adminforge-editor-image.ProseMirror-selectednode {
+          outline: 3px solid #2563eb;
         }
       ` }} />
     </div>
