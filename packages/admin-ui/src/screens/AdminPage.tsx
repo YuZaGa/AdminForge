@@ -30,7 +30,8 @@ function formatRelativeTime(date: Date) {
 }
 
 function CollectionActivity({ name }: { name: string }) {
-  const [lastUpdate, setLastUpdate] = useState<string>("Loading...");
+  const [activity, setActivity] = useState<{ label: string, time: string, isUpdated: boolean } | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`/api/${name}?pageSize=1`)
@@ -38,20 +39,51 @@ function CollectionActivity({ name }: { name: string }) {
       .then(result => {
         const item = result.data?.[0];
         if (item) {
-          const dateStr = item.updatedAt || item.updated_at || item.createdAt || item.created_at;
-          if (dateStr) {
-            setLastUpdate(formatRelativeTime(new Date(dateStr)));
-          } else {
-            setLastUpdate("No date info");
-          }
-        } else {
-          setLastUpdate("No activity");
+          const createdAtStr = (item.createdAt || item.created_at) as string;
+          const updatedAtStr = (item.updatedAt || item.updated_at) as string;
+          const createdAt = createdAtStr ? new Date(createdAtStr) : null;
+          const updatedAt = updatedAtStr ? new Date(updatedAtStr) : null;
+          
+          const isUpdated = updatedAt && createdAt && updatedAt.getTime() > createdAt.getTime() + 1000;
+          const date = isUpdated ? updatedAt : createdAt;
+          
+          setActivity({
+            label: isUpdated ? "Updated" : "Created",
+            time: date ? formatRelativeTime(date) : "Unknown",
+            isUpdated: !!isUpdated
+          });
         }
       })
-      .catch(() => setLastUpdate("Unknown"));
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [name]);
 
-  return <span>{lastUpdate}</span>;
+  if (loading) return <span style={{ color: '#94a3b8', fontSize: '13px' }}>Loading...</span>;
+  if (!activity) return <span style={{ color: '#94a3b8', fontSize: '13px' }}>No activity</span>;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+        <span 
+          style={{ 
+            fontSize: '9px', 
+            padding: '0px 5px', 
+            borderRadius: '10px',
+            background: activity.isUpdated ? '#fef3c7' : '#dcfce7',
+            color: activity.isUpdated ? '#92400e' : '#166534',
+            fontWeight: 700,
+            textTransform: 'uppercase'
+          }}
+        >
+          {activity.label}
+        </span>
+        <span style={{ fontWeight: 500, color: 'var(--color-text)' }}>{activity.time}</span>
+      </div>
+      <div style={{ fontSize: '11px', color: '#64748b' }}>
+        by <span style={{ color: '#0f172a', fontWeight: 600 }}>Admin</span>
+      </div>
+    </div>
+  );
 }
 
 export function AdminPage({ config, role }: AdminPageProps) {
@@ -78,10 +110,10 @@ export function AdminPage({ config, role }: AdminPageProps) {
           <table className="adminforge-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Fields</th>
-                <th>Last Activity</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+                <th style={{ width: 'auto' }}>Collection Name</th>
+                <th style={{ width: '140px' }}>Field Count</th>
+                <th style={{ width: '220px' }}>Last Activity</th>
+                <th style={{ width: '100px', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>

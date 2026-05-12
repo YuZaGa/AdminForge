@@ -18,10 +18,61 @@ function hasAccess(access: AccessConfig | undefined, operation: string, role?: s
   return allowed.includes(role);
 }
 
+function formatRelativeTime(date: Date) {
+  const diff = Date.now() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (isNaN(date.getTime())) return "Invalid date";
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+}
+
+function ActivityCell({ record }: { record: Record<string, unknown> }) {
+  const createdAtStr = (record.createdAt || record.created_at) as string;
+  const updatedAtStr = (record.updatedAt || record.updated_at) as string;
+  
+  const createdAt = createdAtStr ? new Date(createdAtStr) : null;
+  const updatedAt = updatedAtStr ? new Date(updatedAtStr) : null;
+  
+  const isUpdated = updatedAt && createdAt && updatedAt.getTime() > createdAt.getTime() + 1000;
+  const date = isUpdated ? updatedAt : createdAt;
+  const label = isUpdated ? "Updated" : "Created";
+  
+  if (!date) return <span style={{ color: '#94a3b8', fontSize: '13px' }}>No activity</span>;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '120px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+        <span 
+          style={{ 
+            fontSize: '10px', 
+            padding: '1px 6px', 
+            borderRadius: '10px',
+            background: isUpdated ? '#fef3c7' : '#dcfce7',
+            color: isUpdated ? '#92400e' : '#166534',
+            fontWeight: 700,
+            textTransform: 'uppercase'
+          }}
+        >
+          {label}
+        </span>
+        <span style={{ fontWeight: 500, color: 'var(--color-text)' }}>{formatRelativeTime(date)}</span>
+      </div>
+      <div style={{ fontSize: '11px', color: '#64748b' }}>
+        by <span style={{ color: '#0f172a', fontWeight: 600 }}>Admin</span>
+      </div>
+    </div>
+  );
+}
+
 export function TableEngine({ collection, data, basePath, role }: TableEngineProps) {
   const records = data as Record<string, unknown>[];
   const fieldKeys = Object.keys(collection.fields);
-  const displayKeys = ["id", ...fieldKeys.slice(0, 5)];
+  const displayKeys = ["id", ...fieldKeys.slice(0, 4)]; // Show up to 4 fields + ID + Activity
   const canDelete = hasAccess(collection.access, "delete", role);
   const canUpdate = hasAccess(collection.access, "update", role);
 
@@ -31,6 +82,7 @@ export function TableEngine({ collection, data, basePath, role }: TableEnginePro
         <thead>
           <tr>
             {displayKeys.map((key) => <th key={key}>{key}</th>)}
+            <th>Activity</th>
             <th style={{ textAlign: 'right', paddingRight: '20px' }}>Actions</th>
           </tr>
         </thead>
@@ -58,10 +110,15 @@ export function TableEngine({ collection, data, basePath, role }: TableEnginePro
                       </button>
                     </div>
                   ) : (
-                    String(record[key] ?? "")
+                    <div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {String(record[key] ?? "")}
+                    </div>
                   )}
                 </td>
               ))}
+              <td>
+                <ActivityCell record={record} />
+              </td>
               <td style={{ textAlign: 'right', paddingRight: '20px' }}>
                 <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
                   {canUpdate && (
