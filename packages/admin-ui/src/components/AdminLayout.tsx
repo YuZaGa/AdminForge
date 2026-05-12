@@ -53,6 +53,18 @@ export function AdminLayout({ config, children, currentPath, role }: AdminLayout
               </li>
             );
           })}
+          
+          <li className="adminforge-nav-section-title" style={{ marginTop: '24px', padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Access Control
+          </li>
+          <li>
+            <Link href="/admin/roles" className={`adminforge-nav-link ${currentPath?.startsWith("/admin/roles") ? "active" : ""}`}>
+              <div className="adminforge-nav-item-content">
+                <span className="material-symbols-outlined adminforge-nav-icon">shield_person</span>
+                <span>Roles</span>
+              </div>
+            </Link>
+          </li>
         </ul>
       </nav>
       <main className="adminforge-content">
