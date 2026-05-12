@@ -1,6 +1,7 @@
 import type { AdminForgeConfig, CollectionDefinition, AccessConfig } from "@adminforge/core";
 import type { DbClient } from "@adminforge/db";
 import { z } from "zod";
+import { assertScope, type SecurityContext, type Action } from "./security/agent-auth";
 
 function buildValidationSchema(collection: CollectionDefinition): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -18,9 +19,7 @@ function hasAccess(access: AccessConfig | undefined, operation: string, role?: s
   return allowed.includes(role);
 }
 
-export interface AccessInfo {
-  role?: string;
-}
+export type AccessInfo = SecurityContext;
 
 export interface Controller {
   list: (args?: { where?: Record<string, unknown>; orderBy?: Record<string, string>; page?: number; pageSize?: number; search?: string }) => Promise<{ data: unknown[]; total: number; page: number; pageSize: number }>;
@@ -33,15 +32,34 @@ export interface Controller {
 export function createController(
   collection: CollectionDefinition,
   db: DbClient,
-  session?: AccessInfo,
+  session?: SecurityContext,
 ): Controller {
   const validationSchema = buildValidationSchema(collection);
-  const role = session?.role;
+  const role = session?.user?.role || session?.agent?.role;
+  const actorId = session?.user?.id || session?.agent?.sub;
 
-  function requireAccess(operation: "read" | "create" | "update" | "delete") {
+  function requireAccess(operation: Action) {
+    // 1. Scope Enforcement (limiter)
+    if (session?.agent) {
+      assertScope(session.agent, collection.name, operation);
+    }
+
+    // 2. RBAC Enforcement (authority)
     if (!hasAccess(collection.access, operation, role)) {
       throw new Error(`Access denied: ${operation} on ${collection.name}`);
     }
+
+    // 3. Audit Logging
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      type: "mutation_attempt",
+      source: session?.source || "unknown",
+      userId: actorId || "anonymous",
+      role: role || "none",
+      collection: collection.name,
+      action: operation,
+      sessionId: session?.agent?.sessionId,
+    }));
   }
 
   function buildSearchWhere(search?: string): Record<string, unknown> | undefined {

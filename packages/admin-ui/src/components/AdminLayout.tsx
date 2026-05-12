@@ -65,6 +65,18 @@ export function AdminLayout({ config, children, currentPath, role }: AdminLayout
               </div>
             </Link>
           </li>
+
+          <li className="adminforge-nav-section-title" style={{ marginTop: '24px', padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            AI & Agents
+          </li>
+          <li>
+            <Link href="/admin/settings/agent-tokens" className={`adminforge-nav-link ${currentPath === "/admin/settings/agent-tokens" ? "active" : ""}`}>
+              <div className="adminforge-nav-item-content">
+                <span className="material-symbols-outlined adminforge-nav-icon">smart_toy</span>
+                <span>Agent Tokens</span>
+              </div>
+            </Link>
+          </li>
         </ul>
       </nav>
       <main className="adminforge-content">

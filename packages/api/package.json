@@ -13,6 +13,10 @@
       "types": "./dist/next.d.ts",
       "import": "./dist/next.js",
       "require": "./dist/next.cjs"
+    },
+    "./security": {
+      "types": "./src/security/agent-auth.ts",
+      "import": "./src/security/agent-auth.ts"
     }
   },
   "main": "./dist/index.js",
@@ -27,10 +31,13 @@
   "dependencies": {
     "@adminforge/core": "workspace:*",
     "@adminforge/db": "workspace:*",
-    "zod": "^3.24.0",
-    "next": "^15.0.0"
+    "jsonwebtoken": "^9.0.3",
+    "next": "^15.0.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0"

@@ -1,0 +1,27 @@
+{
+  "name": "@adminforge/ai",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "adminforge-ai": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsup",
+    "start": "node dist/cli.js"
+  },
+  "dependencies": {
+    "@adminforge/core": "workspace:*",
+    "@adminforge/db": "workspace:*",
+    "@adminforge/api": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "commander": "^12.1.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}
