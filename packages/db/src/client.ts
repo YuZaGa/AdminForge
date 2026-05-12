@@ -15,6 +15,7 @@ export interface DbClient {
   findUnique(collection: string, id: string): Promise<unknown | null>;
   update(collection: string, id: string, data: Record<string, unknown>): Promise<unknown>;
   delete(collection: string, id: string): Promise<unknown>;
+  count(collection: string, args?: { where?: Record<string, unknown> }): Promise<number>;
 }
 
 export function createDbClient(config: AdminForgeConfig): DbClient {
@@ -38,6 +39,7 @@ export function createDbClient(config: AdminForgeConfig): DbClient {
       findUnique: (args: { where: { id: string }; include?: Record<string, boolean> }) => Promise<unknown | null>;
       update: (args: { where: { id: string }; data: Record<string, unknown>; include?: Record<string, boolean> }) => Promise<unknown>;
       delete: (args: { where: { id: string } }) => Promise<unknown>;
+      count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
     };
   };
 
@@ -133,6 +135,11 @@ export function createDbClient(config: AdminForgeConfig): DbClient {
       const result = await model.delete({ where: { id } });
       await executeAfterDelete(hooks, id);
       return result;
+    },
+
+    async count(collection: string, args: { where?: Record<string, unknown> } = {}): Promise<number> {
+      const model = getPrismaModel(collection);
+      return model.count(args);
     },
   };
 }

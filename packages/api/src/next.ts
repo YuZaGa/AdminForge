@@ -45,8 +45,9 @@ export function createRouteHandlers({ config, db }: RouteParams) {
         }
         const url = new URL(request.url);
         const page = parseInt(url.searchParams.get("page") ?? "1");
-        const pageSize = parseInt(url.searchParams.get("pageSize") ?? "50");
-        const result = await controller.list({ page, pageSize });
+        const pageSize = parseInt(url.searchParams.get("pageSize") ?? "10");
+        const search = url.searchParams.get("search") ?? undefined;
+        const result = await controller.list({ page, pageSize, search });
         return jsonResponse(result);
       },
 

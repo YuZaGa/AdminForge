@@ -23,7 +23,7 @@ export interface AccessInfo {
 }
 
 export interface Controller {
-  list: (args?: { where?: Record<string, unknown>; orderBy?: Record<string, string>; page?: number; pageSize?: number }) => Promise<{ data: unknown[]; total: number; page: number; pageSize: number }>;
+  list: (args?: { where?: Record<string, unknown>; orderBy?: Record<string, string>; page?: number; pageSize?: number; search?: string }) => Promise<{ data: unknown[]; total: number; page: number; pageSize: number }>;
   get: (id: string) => Promise<unknown | null>;
   create: (data: Record<string, unknown>) => Promise<unknown>;
   update: (id: string, data: Record<string, unknown>) => Promise<unknown>;
@@ -42,6 +42,23 @@ export function createController(
     if (!hasAccess(collection.access, operation, role)) {
       throw new Error(`Access denied: ${operation} on ${collection.name}`);
     }
+  }
+
+  function buildSearchWhere(search?: string): Record<string, unknown> | undefined {
+    if (!search) return undefined;
+    
+    // Find all text-based fields to search in
+    const searchFields = Object.entries(collection.fields)
+      .filter(([_, field]) => field.type === "text" || field.type === "slug" || field.type === "richText")
+      .map(([name]) => name);
+
+    if (searchFields.length === 0) return undefined;
+
+    return {
+      OR: searchFields.map(field => ({
+        [field]: { contains: search }
+      }))
+    };
   }
 
   function filterFields(fields: Record<string, unknown>): Record<string, unknown> {
@@ -101,11 +118,19 @@ export function createController(
   return {
     async list(args = {}) {
       requireAccess("read");
-      const { where, orderBy, page = 1, pageSize = 50 } = args;
+      const { where, orderBy, page = 1, pageSize = 50, search } = args;
+      
+      const searchWhere = buildSearchWhere(search);
+      const combinedWhere = searchWhere ? { ...where, ...searchWhere } : where;
+      
       const skip = (page - 1) * pageSize;
-      const raw = await db.findMany(collection.name, { where, orderBy, skip, take: pageSize });
+      const [raw, total] = await Promise.all([
+        db.findMany(collection.name, { where: combinedWhere, orderBy, skip, take: pageSize }),
+        db.count(collection.name, { where: combinedWhere })
+      ]);
+      
       const data = (raw as Record<string, unknown>[]).map(filterFields);
-      return { data, total: data.length, page, pageSize };
+      return { data, total, page, pageSize };
     },
 
     async get(id: string) {

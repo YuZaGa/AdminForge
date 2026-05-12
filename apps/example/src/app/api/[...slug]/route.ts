@@ -36,14 +36,33 @@ export async function GET(
 
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") ?? "1");
-  const pageSize = parseInt(url.searchParams.get("pageSize") ?? "50");
+  const pageSize = parseInt(url.searchParams.get("pageSize") ?? "10");
   const search = url.searchParams.get("search");
 
   const where: Record<string, unknown> = {};
-  if (search) where.search = search;
+  if (search) {
+    const searchFields = Object.entries(collection.fields)
+      .filter(([_, field]) => field.type === "text" || field.type === "slug" || field.type === "richText")
+      .map(([name]) => name);
 
-  const data = await db.findMany(collectionName, { where, skip: (page - 1) * pageSize, take: pageSize });
-  return Response.json({ data, total: data.length, page, pageSize });
+    if (searchFields.length > 0) {
+      where.OR = searchFields.map(field => ({
+        [field]: { contains: search }
+      }));
+    }
+  }
+
+  const [data, total] = await Promise.all([
+    db.findMany(collectionName, { 
+      where, 
+      skip: (page - 1) * pageSize, 
+      take: pageSize,
+      orderBy: { createdAt: 'desc' }
+    }),
+    db.count(collectionName, { where })
+  ]);
+
+  return Response.json({ data, total, page, pageSize });
 }
 
 export async function POST(
