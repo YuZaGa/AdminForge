@@ -90,7 +90,8 @@ export interface CollectionHooks {
 
 export interface CollectionDefinition {
   name: string;
-  label?: string;
+  label: string;
+  icon?: string;
   fields: Record<string, FieldDefinition>;
   hooks?: CollectionHooks;
   access?: AccessConfig;

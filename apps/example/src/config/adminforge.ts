@@ -5,6 +5,7 @@ export const config = defineConfig({
     collection({
       name: "posts",
       label: "Posts",
+      icon: "article",
       access: { create: ["admin"], update: ["admin", "editor"], delete: ["admin"] },
       fields: {
         title: fields.text({ required: true }),
@@ -19,6 +20,7 @@ export const config = defineConfig({
     collection({
       name: "categories",
       label: "Categories",
+      icon: "category",
       access: { read: ["admin"] },
       fields: {
         name: fields.text({ required: true }),
@@ -27,6 +29,7 @@ export const config = defineConfig({
     collection({
       name: "tags",
       label: "Tags",
+      icon: "sell",
       access: { read: ["admin", "editor"], create: ["admin"], update: ["admin"], delete: ["admin"] },
       fields: {
         name: fields.text({ required: true }),

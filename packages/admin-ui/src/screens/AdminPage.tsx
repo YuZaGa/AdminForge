@@ -29,79 +29,70 @@ function formatRelativeTime(date: Date) {
   return `${days}d ago`;
 }
 
-function CollectionActivity({ name }: { name: string }) {
-  const [activity, setActivity] = useState<{ label: string, time: string, isUpdated: boolean } | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/${name}?pageSize=1`)
-      .then(res => res.json())
-      .then(result => {
-        const item = result.data?.[0];
-        if (item) {
-          const createdAtStr = (item.createdAt || item.created_at) as string;
-          const updatedAtStr = (item.updatedAt || item.updated_at) as string;
-          const createdAt = createdAtStr ? new Date(createdAtStr) : null;
-          const updatedAt = updatedAtStr ? new Date(updatedAtStr) : null;
-          
-          const isUpdated = updatedAt && createdAt && updatedAt.getTime() > createdAt.getTime() + 1000;
-          const date = isUpdated ? updatedAt : createdAt;
-          
-          setActivity({
-            label: isUpdated ? "Updated" : "Created",
-            time: date ? formatRelativeTime(date) : "Unknown",
-            isUpdated: !!isUpdated
-          });
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [name]);
-
-  if (loading) return <span style={{ color: '#94a3b8', fontSize: '13px' }}>Loading...</span>;
-  if (!activity) return <span style={{ color: '#94a3b8', fontSize: '13px' }}>No activity</span>;
+function CollectionActivity({ activity }: { activity?: { createdAt: string, updatedAt: string } }) {
+  if (!activity) return <span style={{ color: '#94a3b8', fontSize: '13px' }}>-</span>;
+  
+  const createdAt = new Date(activity.createdAt);
+  const updatedAt = new Date(activity.updatedAt);
+  const isUpdated = updatedAt.getTime() > createdAt.getTime() + 1000;
+  const date = isUpdated ? updatedAt : createdAt;
+  const label = isUpdated ? "Updated" : "Created";
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
-        <span 
-          style={{ 
-            fontSize: '9px', 
-            padding: '0px 5px', 
-            borderRadius: '10px',
-            background: activity.isUpdated ? '#fef3c7' : '#dcfce7',
-            color: activity.isUpdated ? '#92400e' : '#166534',
-            fontWeight: 700,
-            textTransform: 'uppercase'
-          }}
-        >
-          {activity.label}
-        </span>
-        <span style={{ fontWeight: 500, color: 'var(--color-text)' }}>{activity.time}</span>
-      </div>
-      <div style={{ fontSize: '11px', color: '#64748b' }}>
-        by <span style={{ color: '#0f172a', fontWeight: 600 }}>Admin</span>
-      </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+      <span 
+        style={{ 
+          fontSize: '9px', 
+          padding: '1px 6px', 
+          borderRadius: '10px',
+          background: isUpdated ? '#fef3c7' : '#92400e20',
+          color: isUpdated ? '#92400e' : '#166534',
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          border: '1px solid',
+          borderColor: isUpdated ? '#fde68a' : '#bbf7d0'
+        }}
+      >
+        {label}
+      </span>
+      <span style={{ fontWeight: 500, color: 'var(--color-text)' }}>{formatRelativeTime(date)}</span>
     </div>
   );
 }
 
 export function AdminPage({ config, role }: AdminPageProps) {
+  const schemaActivity = (config.collections[0] as any)?.schemaActivity;
+
   return (
     <AdminLayout config={config} currentPath="/admin" role={role}>
       <div className="adminforge-dashboard">
         <div className="mb-10">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
             <h2 className="adminforge-display-title" style={{ marginBottom: 0 }}>Collection Registry</h2>
-            <span className="adminforge-badge" style={{ background: '#f8fafc', color: '#64748b', borderColor: '#e2e8f0', fontSize: '11px', fontWeight: 600 }}>
-              defined in adminforge.ts
-            </span>
           </div>
-          <p className="adminforge-display-subtitle">
-            Overview of all data collections in the system.
+          <p className="adminforge-display-subtitle" style={{ marginBottom: '32px' }}>
+            Index of all data models defined in your system.
           </p>
-          <br></br>
         </div>
+
+        {schemaActivity && (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px', 
+            padding: '12px 20px', 
+            background: '#f0f9ff', 
+            border: '1px solid #bae6fd', 
+            borderRadius: '12px', 
+            marginBottom: '24px',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+          }}>
+            <span className="material-symbols-outlined" style={{ color: '#0284c7', fontSize: '20px' }}>sync</span>
+            <div style={{ fontSize: '14px', color: '#0369a1' }}>
+              <span style={{ fontWeight: 600 }}>Schema Synced:</span> Your definitions from <code style={{ background: '#e0f2fe', padding: '2px 4px', borderRadius: '4px' }}>adminforge.ts</code> were last updated <span style={{ fontWeight: 500 }}>{formatRelativeTime(new Date(schemaActivity.updatedAt))}</span>
+            </div>
+          </div>
+        )}
 
         <div className="adminforge-table-wrapper">
           <div style={{ padding: '24px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -111,9 +102,8 @@ export function AdminPage({ config, role }: AdminPageProps) {
             <thead>
               <tr>
                 <th style={{ width: 'auto' }}>Collection Name</th>
-                <th style={{ width: '140px' }}>Field Count</th>
-                <th style={{ width: '220px' }}>Last Activity</th>
-                <th style={{ width: '100px', textAlign: 'right' }}>Actions</th>
+                <th style={{ width: '180px' }}>Field Definitions</th>
+                <th style={{ width: '120px', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -126,29 +116,38 @@ export function AdminPage({ config, role }: AdminPageProps) {
                   return (
                     <tr key={collection.name}>
                       <td>
-                        <span style={{ fontWeight: 600 }}>{collection.label}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                              {collection.icon || 'database'}
+                            </span>
+                          </div>
+                          <span style={{ fontWeight: 600, color: 'var(--color-text)', fontSize: '15px' }}>{collection.label}</span>
+                        </div>
                       </td>
                       <td>
-                        <span className="adminforge-badge adminforge-badge-secondary">
-                          {Object.keys(collection.fields).length} fields
+                        <span className="adminforge-badge adminforge-badge-secondary" style={{ padding: '4px 10px' }}>
+                          {Object.keys(collection.fields).length} mapped fields
                         </span>
                       </td>
-                      <td style={{ color: 'var(--color-text-secondary)', fontSize: '14px' }}>
-                        <CollectionActivity name={collection.name} />
-                      </td>
                       <td style={{ textAlign: 'right' }}>
-                        <Link href={`/admin/${collection.name}/schema`} className="adminforge-btn-icon" title="View Schema">
-                          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>visibility</span>
-                        </Link>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <Link href={`/admin/${collection.name}`} className="adminforge-btn-icon" title="View Data">
+                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>database</span>
+                          </Link>
+                          <Link href={`/admin/${collection.name}/schema`} className="adminforge-btn-icon" title="View Schema">
+                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>visibility</span>
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
             </tbody>
           </table>
-          <div style={{ padding: '24px', background: '#f8fafc', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-              Showing {config.collections.length} of {config.collections.length} registered collections
+          <div style={{ padding: '20px 24px', background: '#fcfcfd', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+              Showing {config.collections.length} models from your current configuration.
             </p>
           </div>
         </div>

@@ -38,7 +38,7 @@ export function AdminLayout({ config, children, currentPath, role }: AdminLayout
             const a = collection.access;
             if (a?.read && role && !a.read.includes(role)) return null;
             const href = `/admin/${collection.name}`;
-            const icon = iconMap[collection.name] || "database";
+            const icon = collection.icon || "database";
             return (
               <li key={collection.name} className="adminforge-nav-item">
                 <Link href={href} className={`adminforge-nav-link ${currentPath === href ? "active" : ""}`}>
