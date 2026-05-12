@@ -627,59 +627,189 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--radius-md);
   overflow: hidden;
   background: #fff;
-  transition: border-color 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
 }
 
 .adminforge-editor:focus-within {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(0, 88, 190, 0.1);
+  box-shadow: 0 0 0 4px rgba(0, 88, 190, 0.08), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .adminforge-editor-toolbar {
   display: flex;
-  gap: 4px;
+  align-items: center;
   flex-wrap: wrap;
-  padding: 8px;
+  padding: 6px;
   background: #f8fafc;
   border-bottom: 1px solid var(--color-border);
+  gap: 4px;
+}
+
+.adminforge-editor-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.adminforge-editor-toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  margin: 0 4px;
 }
 
 .adminforge-editor-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
-  font-size: 13px;
-  font-weight: 600;
+  width: 32px;
+  height: 32px;
   border: 1px solid transparent;
-  border-radius: var(--radius);
+  border-radius: 4px;
   background: transparent;
-  color: var(--color-text-secondary);
+  color: #64748b;
   cursor: pointer;
-  transition: all 0.15s;
-  min-width: 32px;
+  transition: all 0.1s;
 }
 
-.adminforge-editor-btn:hover {
+.adminforge-editor-btn:hover:not(:disabled) {
   background: #e2e8f0;
-  color: var(--color-text);
+  color: #1e293b;
+}
+
+.adminforge-editor-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .adminforge-editor-btn.active {
-  background: var(--color-primary);
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #bae6fd;
+}
+
+.adminforge-editor-bubble-menu {
+  display: flex;
+  background: #1e293b;
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  gap: 2px;
+  animation: fadeIn 0.1s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.adminforge-editor-bubble-menu .adminforge-editor-btn {
+  color: #cbd5e1;
+}
+
+.adminforge-editor-bubble-menu .adminforge-editor-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
+.adminforge-editor-bubble-menu .adminforge-editor-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: transparent;
+}
+
 .adminforge-editor-content {
-  padding: 16px;
-  min-height: 250px;
+  padding: 24px;
+  min-height: 350px;
 }
 
 .adminforge-editor-content .ProseMirror {
   outline: none;
-  min-height: 220px;
-  font-size: 15px;
-  line-height: 1.6;
+  min-height: 300px;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #1e293b;
+}
+
+.adminforge-editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Tiptap Element Styles */
+.adminforge-editor-content .ProseMirror h1 { font-size: 2.25em; font-weight: 800; margin-bottom: 0.5em; }
+.adminforge-editor-content .ProseMirror h2 { font-size: 1.5em; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.5em; }
+.adminforge-editor-content .ProseMirror h3 { font-size: 1.25em; font-weight: 600; margin-top: 1.2em; margin-bottom: 0.4em; }
+
+.adminforge-editor-content .ProseMirror ul, 
+.adminforge-editor-content .ProseMirror ol {
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.adminforge-editor-content .ProseMirror blockquote {
+  border-left: 4px solid var(--color-primary);
+  padding-left: 1em;
+  margin-left: 0;
+  color: #64748b;
+  font-style: italic;
+}
+
+.adminforge-editor-content .ProseMirror pre {
+  background: #1e293b;
+  color: #f8fafc;
+  padding: 1em;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.9em;
+  overflow-x: auto;
+}
+
+.adminforge-editor-content .ProseMirror code {
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.adminforge-editor-content .ProseMirror a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.adminforge-editor-content .ProseMirror hr {
+  border: none;
+  border-top: 2px solid var(--color-border);
+  margin: 2em 0;
+}
+
+.adminforge-editor-content .ProseMirror mark {
+  background-color: #fef08a;
+  padding: 0 0.2em;
+  border-radius: 2px;
+}
+
+.adminforge-editor-content .ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+.adminforge-editor-content .ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 0.5em;
+}
+
+.adminforge-editor-content .ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
+  margin-top: 0.3em;
+  cursor: pointer;
 }
 
 /* Image Upload */

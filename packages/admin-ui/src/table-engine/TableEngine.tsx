@@ -110,7 +110,7 @@ export function TableEngine({ collection, data, basePath, role }: TableEnginePro
                       </button>
                     </div>
                   ) : (
-                    <div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {String(record[key] ?? "")}
                     </div>
                   )}
