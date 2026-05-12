@@ -85,8 +85,28 @@ export function CollectionListPage({ config, collection, data, total, page, page
 
           {/* Pagination Footer */}
           <div style={{ padding: '16px 24px', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fcfcfd' }}>
-            <div style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-              Showing <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{startEntry}</span> to <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{endEntry}</span> of <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{total}</span> results
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+                Showing <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{startEntry}</span> to <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{endEntry}</span> of <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{total}</span> results
+              </div>
+              <select 
+                value={pageSize} 
+                onChange={(e) => updateParams({ pageSize: e.target.value, page: 1 })}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  fontSize: '12px',
+                  background: 'white',
+                  color: 'var(--color-text)',
+                  cursor: 'pointer',
+                  outline: 'none'
+                }}
+              >
+                {[10, 25, 50, 100].map(size => (
+                  <option key={size} value={size}>{size} / page</option>
+                ))}
+              </select>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button 
