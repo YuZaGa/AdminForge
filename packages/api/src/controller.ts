@@ -39,6 +39,8 @@ export function createController(
   const actorId = session?.user?.id || session?.agent?.sub;
 
   function requireAccess(operation: Action) {
+    console.log(`[ACL] Operation: ${operation}, Collection: ${collection.name}, Role: ${role}, Source: ${session?.source}`);
+    
     // 1. Scope Enforcement (limiter)
     if (session?.agent) {
       assertScope(session.agent, collection.name, operation);
@@ -46,6 +48,7 @@ export function createController(
 
     // 2. RBAC Enforcement (authority)
     if (!hasAccess(collection.access, operation, role)) {
+      console.warn(`[ACL] DENIED: ${role} not allowed to ${operation} on ${collection.name}. Allowed:`, collection.access?.[operation]);
       throw new Error(`Access denied: ${operation} on ${collection.name}`);
     }
 

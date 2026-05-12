@@ -1,6 +1,7 @@
 import type { AdminForgeConfig, CollectionDefinition } from "@adminforge/core";
 import type { DbClient } from "@adminforge/db";
 import { createController } from "./controller.js";
+import { verifyAgentToken, type SecurityContext } from "./security/agent-auth.js";
 
 interface RouteContext {
   params: Promise<Record<string, string>>;
@@ -23,20 +24,38 @@ interface RouteParams {
 }
 
 export function createRouteHandlers({ config, db }: RouteParams) {
-  const controllerMap = new Map<string, ReturnType<typeof createController>>();
-  for (const collection of config.collections) {
-    controllerMap.set(collection.name, createController(collection, db));
-  }
+  // We'll create controllers per request to inject the correct security context
+  const getSecurity = (request: Request): SecurityContext => {
+    const authHeader = request.headers.get("authorization");
+    console.log(`[Auth] Header present: ${!!authHeader}`);
+    
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      console.log(`[Auth] Token detected (start): ${token.substring(0, 10)}...`);
+      try {
+        const agent = verifyAgentToken(token);
+        return {
+          source: "agent",
+          agent,
+          user: { id: agent.sub, role: agent.role } // Bridge for RBAC
+        };
+      } catch (e: any) {
+        console.error(`[Auth] Agent Verification Failed: ${e.message}`);
+      }
+    }
+    return { source: "user" }; 
+  };
 
   function generateHandlers(collectionName: string) {
     const collection = config.collections.find((c) => c.name === collectionName);
     if (!collection) {
       throw new Error(`Collection "${collectionName}" not found in config`);
     }
-    const controller = controllerMap.get(collectionName)!;
 
     return {
       GET: async (request: Request, context: RouteContext) => {
+        const security = getSecurity(request);
+        const controller = createController(collection, db, security);
         const params = await context.params;
         if (params.id) {
           const result = await controller.get(params.id);
@@ -52,6 +71,8 @@ export function createRouteHandlers({ config, db }: RouteParams) {
       },
 
       POST: async (request: Request) => {
+        const security = getSecurity(request);
+        const controller = createController(collection, db, security);
         const body = await getBody(request);
         try {
           const result = await controller.create(body);
@@ -63,6 +84,8 @@ export function createRouteHandlers({ config, db }: RouteParams) {
       },
 
       PATCH: async (request: Request, context: RouteContext) => {
+        const security = getSecurity(request);
+        const controller = createController(collection, db, security);
         const params = await context.params;
         if (!params.id) return jsonResponse({ error: "ID required" }, 400);
         const body = await getBody(request);
@@ -76,6 +99,8 @@ export function createRouteHandlers({ config, db }: RouteParams) {
       },
 
       DELETE: async (request: Request, context: RouteContext) => {
+        const security = getSecurity(request);
+        const controller = createController(collection, db, security);
         const params = await context.params;
         if (!params.id) return jsonResponse({ error: "ID required" }, 400);
         try {

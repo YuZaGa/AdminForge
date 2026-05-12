@@ -1,14 +1,37 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getConfig, getDb } from "../../../lib/adminforge";
-import { auth } from "../../../lib/auth";
+import { verifyAgentToken, type SecurityContext } from "@adminforge/api/security";
 
-function getRole(request: NextRequest): string | undefined {
-  const cookie = request.headers.get("cookie") ?? "";
-  if (!cookie.includes("authjs.session-token") && !cookie.includes("next-auth.session-token")) {
-    return undefined;
+async function getSecurity(request: NextRequest): Promise<SecurityContext> {
+  // 1. Check for Agent Token
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    try {
+      const agent = verifyAgentToken(token);
+      return { 
+        source: "agent", 
+        agent, 
+        user: { id: agent.sub, role: agent.role } 
+      };
+    } catch (e: any) {
+      console.error(`[Auth] Agent Verification Failed: ${e.message}`);
+    }
   }
-  return "admin";
+
+  // 2. Check for User Session (Fallback for browser)
+  const cookie = request.headers.get("cookie") ?? "";
+  const hasSession = cookie.includes("authjs.session-token") || cookie.includes("next-auth.session-token");
+  
+  if (hasSession) {
+    return { 
+      source: "user", 
+      user: { id: "unknown", role: "admin" } // Simplified for this example route
+    };
+  }
+
+  return { source: "user" };
 }
 
 export async function GET(
@@ -26,7 +49,7 @@ export async function GET(
   }
 
   const db = getDb();
-  const role = getRole(request);
+  const security = await getSecurity(request);
 
   if (id) {
     const result = await db.findUnique(collectionName, id);
@@ -79,11 +102,11 @@ export async function POST(
 
   const body = await request.json();
   const db = getDb();
-  const role = getRole(request);
+  const security = await getSecurity(request);
 
   try {
     const { createController } = await import("@adminforge/api");
-    const controller = createController(collection, db, { role });
+    const controller = createController(collection, db, security);
     const result = await controller.create(body);
     return Response.json(result, { status: 201 });
   } catch (err) {
@@ -94,7 +117,7 @@ export async function POST(
       }, { status: 400 });
     }
     const error = err as Error;
-    if (error.message.startsWith("Access denied")) {
+    if (error.message.startsWith("Access denied") || error.message.startsWith("Forbidden")) {
       return Response.json({ error: error.message }, { status: 403 });
     }
     return Response.json({ error: error.message }, { status: 400 });
@@ -116,11 +139,11 @@ export async function PATCH(
 
   const body = await request.json();
   const db = getDb();
-  const role = getRole(request);
+  const security = await getSecurity(request);
 
   try {
     const { createController } = await import("@adminforge/api");
-    const controller = createController(collection, db, { role });
+    const controller = createController(collection, db, security);
     const result = await controller.update(id, body);
     return Response.json(result);
   } catch (err) {
@@ -131,7 +154,7 @@ export async function PATCH(
       }, { status: 400 });
     }
     const error = err as Error;
-    if (error.message.startsWith("Access denied")) {
+    if (error.message.startsWith("Access denied") || error.message.startsWith("Forbidden")) {
       return Response.json({ error: error.message }, { status: 403 });
     }
     return Response.json({ error: error.message }, { status: 400 });
@@ -152,16 +175,16 @@ export async function DELETE(
   if (!collection) return Response.json({ error: "Not found" }, { status: 404 });
 
   const db = getDb();
-  const role = getRole(request);
+  const security = await getSecurity(request);
 
   try {
     const { createController } = await import("@adminforge/api");
-    const controller = createController(collection, db, { role });
+    const controller = createController(collection, db, security);
     await controller.delete(id);
     return Response.json({ success: true });
   } catch (err) {
     const error = err as Error;
-    if (error.message.startsWith("Access denied")) {
+    if (error.message.startsWith("Access denied") || error.message.startsWith("Forbidden")) {
       return Response.json({ error: error.message }, { status: 403 });
     }
     return Response.json({ error: error.message }, { status: 400 });
