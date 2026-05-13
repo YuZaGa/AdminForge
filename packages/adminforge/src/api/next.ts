@@ -27,11 +27,11 @@ export function createRouteHandlers({ config, db }: RouteParams) {
   // We'll create controllers per request to inject the correct security context
   const getSecurity = (request: Request): SecurityContext => {
     const authHeader = request.headers.get("authorization");
-    console.log(`[Auth] Header present: ${!!authHeader}`);
+    console.error(`[Auth] Header present: ${!!authHeader}`);
     
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
-      console.log(`[Auth] Token detected (start): ${token.substring(0, 10)}...`);
+      console.error(`[Auth] Token detected (start): ${token.substring(0, 10)}...`);
       try {
         const agent = verifyAgentToken(token);
         return {

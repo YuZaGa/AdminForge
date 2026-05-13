@@ -10,17 +10,51 @@ import { verifyAgentToken, type SecurityContext } from "adminforge/next";
 import { ContentAgent } from "./orchestrator";
 import { defineAIHints } from "./hints";
 import path from "path";
+import fs from "fs";
+
+// --- GLOBAL STDOUT PROTECTION ---
+// MCP uses stdout for JSON-RPC. Any console.log calls in libraries will break the protocol.
+// We redirect all logs to stderr to keep stdout clean.
+console.log = (...args) => console.error(...args);
 
 /**
  * --- Configuration ---
  */
-const CONFIG_PATH = process.env.ADMINFORGE_CONFIG_PATH || "./adminforge.ts";
+const CONFIG_PATH_ENV = process.env.ADMINFORGE_CONFIG_PATH;
 
 async function loadConfig() {
-  const resolvedPath = path.isAbsolute(CONFIG_PATH)
-    ? CONFIG_PATH
-    : path.resolve(process.cwd(), CONFIG_PATH);
-  const mod = await import(resolvedPath);
+  const cwd = process.cwd();
+  // console.error(`[MCP] Current Working Directory: ${cwd}`);
+
+  const fallbacks = [
+    CONFIG_PATH_ENV,
+    "/home/yuzaga/Code/AdminForge/apps/example/src/config/adminforge.ts",
+    "./adminforge.ts",
+    "./adminforge.config.ts",
+    "../../apps/example/src/config/adminforge.ts",
+    "../../../apps/example/src/config/adminforge.ts",
+    "./apps/example/src/config/adminforge.ts"
+  ].filter(Boolean) as string[];
+
+  let resolvedPath: string | null = null;
+
+  for (const p of fallbacks) {
+    const absolute = path.isAbsolute(p) ? p : path.resolve(cwd, p);
+    if (fs.existsSync(absolute)) {
+      resolvedPath = absolute;
+      break;
+    }
+  }
+
+  if (!resolvedPath) {
+    throw new Error(`Could not find adminforge.ts config file. CWD: ${cwd}. Tried: ${fallbacks.join(", ")}`);
+  }
+
+  // console.error(`[MCP] Loading config from: ${resolvedPath}`);
+  
+  // Use file:// prefix for absolute paths to ensure compatibility with ESM imports
+  const importPath = path.isAbsolute(resolvedPath) ? `file://${resolvedPath}` : resolvedPath;
+  const mod = await import(importPath);
   return mod.config;
 }
 
@@ -89,6 +123,33 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             token: { type: "string" },
           },
           required: ["collection", "data", "token"],
+        },
+      },
+      {
+        name: "update_record",
+        description: "Updates an existing record in AdminForge. REQUIRES TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            collection: { type: "string" },
+            id: { type: "string" },
+            data: { type: "object" },
+            token: { type: "string" },
+          },
+          required: ["collection", "id", "data", "token"],
+        },
+      },
+      {
+        name: "list_records",
+        description: "Lists records from a collection. REQUIRES TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            collection: { type: "string" },
+            limit: { type: "number" },
+            token: { type: "string" },
+          },
+          required: ["collection", "token"],
         },
       },
     ],
@@ -176,6 +237,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     }
 
+    case "list_records": {
+      const collectionName = (args as any).collection;
+      const limit = (args as any).limit || 100;
+      const config = await loadConfig();
+      const results = await db.findMany(collectionName, { take: limit });
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }],
+      };
+    }
+
+    case "update_record": {
+      const collectionName = (args as any).collection;
+      const id = (args as any).id;
+      const data = (args as any).data;
+      const config = await loadConfig();
+      const collection = config.collections.find((c: any) => c.name === collectionName)!;
+      const controller = createController(collection, db, securityContext);
+      const result = await controller.update(id, data);
+      return {
+        content: [{ type: "text", text: JSON.stringify({ id: (result as any).id, status: "updated" }, null, 2) }],
+      };
+    }
+
     case "create_record": {
       const collectionName = (args as any).collection;
       const data = (args as any).data;
@@ -196,4 +280,4 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 const transport = new StdioServerTransport();
 server.connect(transport).catch(console.error);
 
-console.error("AdminForge AI MCP Server V2 (Secure) running on stdio");
+// console.error("AdminForge AI MCP Server V2 (Secure) running on stdio");

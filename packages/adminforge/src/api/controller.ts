@@ -39,7 +39,7 @@ export function createController(
   const actorId = session?.user?.id || session?.agent?.sub;
 
   function requireAccess(operation: Action) {
-    console.log(`[ACL] Operation: ${operation}, Collection: ${collection.name}, Role: ${role}, Source: ${session?.source}`);
+    console.error(`[ACL] Operation: ${operation}, Collection: ${collection.name}, Role: ${role}, Source: ${session?.source}`);
     
     // 1. Scope Enforcement (limiter)
     if (session?.agent) {
@@ -53,7 +53,7 @@ export function createController(
     }
 
     // 3. Audit Logging
-    console.log(JSON.stringify({
+    console.error(JSON.stringify({
       timestamp: new Date().toISOString(),
       type: "mutation_attempt",
       source: session?.source || "unknown",

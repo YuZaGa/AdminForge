@@ -63,11 +63,16 @@ export class ContentAgent {
           const targetCollectionDef = this.config.collections.find(c => c.name === targetCollection);
           if (!targetCollectionDef) continue;
 
-          console.log(`[Orchestrator] Resolving relation for ${name}: "${val}"...`);
+          console.error(`[Orchestrator] Resolving relation for ${name}: "${val}"...`);
           
           // Build a safe query based on known common search fields
           const searchFields = ["name", "title", "label"].filter(f => targetCollectionDef.fields[f]);
-          const orQuery = searchFields.map(f => ({ [f]: { contains: val } }));
+          const orQuery = searchFields.map(f => ({ 
+            [f]: { 
+              contains: val,
+              mode: "insensitive" 
+            } 
+          }));
 
           if (orQuery.length === 0) {
             unresolved.push(name);
@@ -96,7 +101,7 @@ export class ContentAgent {
    */
   async execute(prompt: string, collectionName: string, session: any) {
     const collection = this.getCollection(collectionName);
-    console.log(`[ContentAgent] Orchestrating ${collectionName} for prompt: "${prompt}"`);
+    console.error(`[ContentAgent] Orchestrating ${collectionName} for prompt: "${prompt}"`);
 
     // Note: In the MCP adapter, the agent will call get_form_schema (enriched)
     // and then provide a draft. This orchestrator ensures the draft is perfect.
