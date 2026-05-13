@@ -36,6 +36,7 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: pnpm -r publish --no-git-checks
+          createGithubReleases: aggregate
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

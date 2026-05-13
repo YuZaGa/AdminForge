@@ -5,6 +5,11 @@
   "publishConfig": {
     "access": "public"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YuZaGa/AdminForge.git",
+    "directory": "packages/api"
+  },
   "type": "module",
   "exports": {
     ".": {
