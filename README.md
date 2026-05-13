@@ -104,6 +104,67 @@ curl -X POST http://localhost:3000/api/posts \
 
 ---
 
+## 🛠️ Integration Guide (For Existing Apps)
+
+If you already have a Next.js 15 application and want to add AdminForge, follow these steps:
+
+### 1. Install Packages
+```bash
+pnpm add @adminforge/api @adminforge/admin-ui @adminforge/core @adminforge/db
+```
+
+### 2. Define your Schema
+Create an `adminforge.config.ts` in your root:
+```typescript
+import { defineConfig } from "@adminforge/core";
+
+export const config = defineConfig({
+  collections: [
+    {
+      name: "posts",
+      label: "Blog Posts",
+      fields: {
+        title: { type: "text", validation: z.string().min(5) },
+        content: { type: "richText" }
+      }
+    }
+  ]
+});
+```
+
+### 3. Mount the API
+Create `app/api/[...slug]/route.ts`:
+```typescript
+import { createRouteHandlers } from "@adminforge/api/next";
+import { config } from "@/adminforge.config";
+import { db } from "@/lib/db";
+
+export const { GET, POST, PATCH, DELETE } = createRouteHandlers({ config, db });
+```
+
+### 4. Build the Dashboard
+Create `app/admin/[[...path]]/page.tsx`:
+```typescript
+import { AdminLayout } from "@adminforge/admin-ui";
+import { config } from "@/adminforge.config";
+
+export default function AdminPage() {
+  return <AdminLayout config={config} />;
+}
+```
+
+---
+
+## 📖 Developer Documentation
+
+### Security & AI
+AdminForge uses a dual-layer security model. While browser users are authenticated via session cookies (e.g., NextAuth), AI agents use **Scoped JWTs**. This allows you to grant an agent "Read Only" access to your `users` collection but "Full Access" to your `posts`.
+
+### Customizing Fields
+You can extend AdminForge with custom field types by providing your own React components to the `AdminLayout` registry.
+
+---
+
 ## 📜 License
 
 Distributed under the **MIT License**. See `LICENSE` for more information.

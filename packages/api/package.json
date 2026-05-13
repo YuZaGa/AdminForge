@@ -1,7 +1,10 @@
 {
   "name": "@adminforge/api",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -15,8 +18,9 @@
       "require": "./dist/next.cjs"
     },
     "./security": {
-      "types": "./src/security/agent-auth.ts",
-      "import": "./src/security/agent-auth.ts"
+      "types": "./dist/security.d.ts",
+      "import": "./dist/security.js",
+      "require": "./dist/security.cjs"
     }
   },
   "main": "./dist/index.js",
