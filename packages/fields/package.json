@@ -1,7 +1,10 @@
 {
   "name": "@adminforge/fields",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -24,6 +27,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@types/node": "^22.10.1",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0"
   }
