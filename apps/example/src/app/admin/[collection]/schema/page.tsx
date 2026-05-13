@@ -1,4 +1,4 @@
-import { CollectionSchemaPage } from "@adminforge/admin-ui";
+import { CollectionSchemaPage } from "adminforge/ui";
 import { getConfig } from "../../../../lib/adminforge";
 import { notFound } from "next/navigation";
 

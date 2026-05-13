@@ -1,7 +1,7 @@
 "use client";
 
-import { CollectionListPage } from "@adminforge/admin-ui";
-import type { AdminForgeConfig } from "@adminforge/core";
+import { CollectionListPage } from "adminforge/ui";
+import type { AdminForgeConfig } from "adminforge";
 import { useEffect, useState, use } from "react";
 import { useSearchParams } from "next/navigation";
 import { useConfig } from "../../../lib/use-config";

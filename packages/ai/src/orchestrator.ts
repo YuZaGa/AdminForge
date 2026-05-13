@@ -1,6 +1,6 @@
-import { type AdminForgeConfig, type CollectionDefinition } from "@adminforge/core";
-import { type DbClient } from "@adminforge/db";
-import { createController } from "@adminforge/api";
+import { type AdminForgeConfig, type CollectionDefinition } from "adminforge";
+import { type DbClient } from "adminforge";
+import { createController } from "adminforge/next";
 import { type AIHintsConfig, mergeHints } from "./hints";
 import { z } from "zod";
 

@@ -4,19 +4,23 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { createDbClient } from "@adminforge/db";
-import { createController } from "@adminforge/api";
-import { verifyAgentToken, type SecurityContext } from "@adminforge/api/security";
+import { createDbClient } from "adminforge";
+import { createController } from "adminforge/next";
+import { verifyAgentToken, type SecurityContext } from "adminforge/next";
 import { ContentAgent } from "./orchestrator";
 import { defineAIHints } from "./hints";
+import path from "path";
 
 /**
  * --- Configuration ---
  */
-const CONFIG_PATH = "./adminforge-config.ts";
+const CONFIG_PATH = process.env.ADMINFORGE_CONFIG_PATH || "./adminforge.ts";
 
 async function loadConfig() {
-  const mod = await import(CONFIG_PATH);
+  const resolvedPath = path.isAbsolute(CONFIG_PATH)
+    ? CONFIG_PATH
+    : path.resolve(process.cwd(), CONFIG_PATH);
+  const mod = await import(resolvedPath);
   return mod.config;
 }
 

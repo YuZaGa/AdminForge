@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "adminforge": {
+      "type": "local",
+      "command": ["node", "packages/ai/dist/cli.js", "start", "--config", "apps/example/src/config/adminforge.ts"],
+      "enabled": true,
+      "environment": {
+        "DATABASE_URL": "file:apps/example/dev.db",
+        "ADMINFORGE_SECRET": "adminforge-dev-secret-change-me"
+      }
+    }
+  }
+}
