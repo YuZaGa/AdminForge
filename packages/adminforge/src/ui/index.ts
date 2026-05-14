@@ -1,4 +1,5 @@
 export { AdminLayout } from "./components/AdminLayout.js";
+export { AdminDashboard } from "./AdminDashboard.js";
 export { AdminPage } from "./screens/AdminPage.js";
 export { CollectionListPage } from "./screens/CollectionListPage.js";
 export { CollectionFormPage } from "./screens/CollectionFormPage.js";

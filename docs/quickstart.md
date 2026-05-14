@@ -120,67 +120,20 @@ export function getDb() {
 
 ## 5. Mount API Routes
 
+Create a catch-all route at `app/api/admin/[...admin]/route.ts`:
+
 ```ts
-// app/api/[...slug]/route.ts
-import { NextRequest } from "next/server";
-import { z } from "zod";
+// app/api/admin/[...admin]/route.ts
+import { createAdminForgeApi } from "adminforge/next";
 import { getConfig, getDb } from "@/lib/adminforge";
-import { verifyAgentToken, type SecurityContext } from "adminforge/next";
 
-async function getSecurity(request: NextRequest): Promise<SecurityContext> {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.split(" ")[1];
-    try {
-      const agent = verifyAgentToken(token);
-      return { source: "agent", agent, user: { id: agent.sub, role: agent.role } };
-    } catch {}
-  }
-  return { source: "user" };
-}
+const config = getConfig();
+const db = getDb();
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
-  const { slug } = await params;
-  const [collectionName, id] = slug;
-  const { createController } = await import("adminforge/next");
-  const config = getConfig();
-  const collection = config.collections.find((c) => c.name === collectionName);
-  if (!collection) return Response.json({ error: "Not found" }, { status: 404 });
-  const db = getDb();
-  const security = await getSecurity(request);
-  const controller = createController(collection, db, security);
-  if (id) {
-    const result = await controller.get(id);
-    return Response.json(result ?? { error: "Not found" }, { status: result ? 200 : 404 });
-  }
-  const url = new URL(request.url);
-  const result = await controller.list({
-    page: parseInt(url.searchParams.get("page") ?? "1"),
-    pageSize: parseInt(url.searchParams.get("pageSize") ?? "10"),
-    search: url.searchParams.get("search") ?? undefined,
-  });
-  return Response.json(result);
-}
-
-export async function POST(request: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
-  const { slug } = await params;
-  const { createController } = await import("adminforge/next");
-  const config = getConfig();
-  const collection = config.collections.find((c) => c.name === slug[0]);
-  if (!collection) return Response.json({ error: "Not found" }, { status: 404 });
-  const db = getDb();
-  const security = await getSecurity(request);
-  const controller = createController(collection, db, security);
-  try {
-    const result = await controller.create(await request.json());
-    return Response.json(result, { status: 201 });
-  } catch (err) {
-    return Response.json({ error: (err as Error).message }, { status: 400 });
-  }
-}
-
-// Add PATCH, DELETE similarly
+export const { GET, POST, PATCH, DELETE } = createAdminForgeApi({ config, db });
 ```
+
+This single line handles all CRUD operations, searching, and security for every collection in your config.
 
 ## 6. Mount the Dashboard
 
@@ -199,13 +152,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 
 ```ts
-// app/admin/page.tsx
-"use client";
-import { AdminPage } from "adminforge/ui";
-import type { AdminForgeConfig } from "adminforge";
+// app/admin/[[...admin]]/page.tsx
+import { AdminDashboard } from "adminforge/ui";
+import { getConfig } from "@/lib/adminforge";
 
-export default function Dashboard() {
-  return <AdminPage config={config} role="admin" />;
+export default async function Dashboard({ params }: { params: Promise<{ admin?: string[] }> }) {
+  const config = getConfig();
+  const resolvedParams = await params;
+  
+  return <AdminDashboard config={config} params={resolvedParams} />;
 }
 ```
 
@@ -216,6 +171,12 @@ npm run dev
 ```
 
 Visit `http://localhost:3000/admin`.
+
+---
+
+## Looking for more control?
+
+If you need to customize the API logic or use a different routing structure, check out the [Manual Setup & Custom Integration](./manual-setup.md) guide.
 
 ---
 

@@ -116,3 +116,55 @@ export function createRouteHandlers({ config, db }: RouteParams) {
 
   return { generateHandlers };
 }
+
+export function createAdminForgeApi({ config, db }: RouteParams) {
+  const { generateHandlers } = createRouteHandlers({ config, db });
+
+  const getCollectionAndId = (slug: string[]) => {
+    const [collectionName, id] = slug;
+    const handlers = generateHandlers(collectionName);
+    return { handlers, id };
+  };
+
+  return {
+    async GET(request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
+      try {
+        const { slug } = await params;
+        const { handlers, id } = getCollectionAndId(slug);
+        return handlers.GET(request, { params: Promise.resolve({ id: id || "" }) });
+      } catch (err) {
+        return jsonResponse({ error: (err as Error).message }, 404);
+      }
+    },
+
+    async POST(request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
+      try {
+        const { slug } = await params;
+        const { handlers } = getCollectionAndId(slug);
+        return handlers.POST(request);
+      } catch (err) {
+        return jsonResponse({ error: (err as Error).message }, 404);
+      }
+    },
+
+    async PATCH(request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
+      try {
+        const { slug } = await params;
+        const { handlers, id } = getCollectionAndId(slug);
+        return handlers.PATCH(request, { params: Promise.resolve({ id: id || "" }) });
+      } catch (err) {
+        return jsonResponse({ error: (err as Error).message }, 404);
+      }
+    },
+
+    async DELETE(request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
+      try {
+        const { slug } = await params;
+        const { handlers, id } = getCollectionAndId(slug);
+        return handlers.DELETE(request, { params: Promise.resolve({ id: id || "" }) });
+      } catch (err) {
+        return jsonResponse({ error: (err as Error).message }, 404);
+      }
+    },
+  };
+}

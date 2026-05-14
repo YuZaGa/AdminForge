@@ -98,59 +98,35 @@ import { normalize } from "adminforge";
 
 ## adminforge/next
 
-### Route Handlers
+### Next.js Helpers (`adminforge/next`)
 
-```ts
-import { createRouteHandlers } from "adminforge/next";
+#### `createAdminForgeApi({ config, db })`
 
-const { generateHandlers } = createRouteHandlers({ config, db });
-const handlers = generateHandlers(collectionName);
-// handlers.GET, handlers.POST, handlers.PATCH, handlers.DELETE
-```
+The easiest way to mount AdminForge. Creates catch-all route handlers for the App Router.
+Returns: `{ GET, POST, PATCH, DELETE }`
 
-### Controller
+#### `generateAgentToken(userId, role, scopes, expiresIn?)`
 
-```ts
-import { createController } from "adminforge/next";
-import type { Controller } from "adminforge/next";
+Creates a signed JWT for AI agents.
 
-const controller = createController(collection, db, securityContext);
-controller.list({ page, pageSize, search });
-controller.get(id);
-controller.create(data);
-controller.update(id, data);
-controller.delete(id);
-```
+#### `verifyAgentToken(token)`
 
-### Auth Utilities
+Verifies an AI agent JWT and returns the payload.
 
-```ts
-import { createAuthConfig, auth, adminMiddleware } from "adminforge/next";
-```
+#### `createController(collection, db, securityContext)`
 
-- `createAuthConfig(options)` — Creates an auth configuration object
-- `auth` — Reference to the auth providers config
-- `adminMiddleware(handler)` — Wraps a Next.js route handler with session-check middleware
+Low-level controller for manual API implementations.
 
-### Agent Security
+### UI Entry Point (`adminforge/ui`)
 
-```ts
-import {
-  generateAgentToken,
-  verifyAgentToken,
-  assertScope,
-} from "adminforge/next";
-import type {
-  SecurityContext,
-  AgentTokenPayload,
-  AgentSession,
-  Action,
-} from "adminforge/next";
-```
+#### `AdminDashboard`
 
-- `generateAgentToken(userId, role, scopes, expiresIn?)` — Creates a signed JWT
-- `verifyAgentToken(token)` — Verifies and decodes a JWT
-- `assertScope(agent, collection, action)` — Throws if scope is not authorized
+The primary React entry point. Handles internal routing and data fetching automatically.
+
+- `config`: Your `AdminForgeConfig`
+- `params`: The catch-all route params (from Next.js)
+
+#### `AdminPage`
 
 ---
 
