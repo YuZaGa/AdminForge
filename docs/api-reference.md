@@ -168,9 +168,18 @@ import { AuthProvider, useAdminSession } from "adminforge/ui";
 
 ---
 
-## @adminforge/ai
+## CLI Reference
 
-### CLI
+### `adminforge` (Main CLI)
+
+```bash
+npx adminforge migrate           # Create and run migrations (dev)
+npx adminforge migrate --push    # Sync DB directly (local dev)
+npx adminforge migrate --deploy  # Apply migrations (production/Vercel)
+npx adminforge makemigrations    # Create migration files without applying
+```
+
+### `adminforge-ai` (AI Extension)
 
 ```bash
 npx adminforge-ai start          # Start MCP server

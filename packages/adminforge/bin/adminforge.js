@@ -15,6 +15,7 @@ if (!command) {
 
 // Find config file
 const possiblePaths = [
+  "adminforge.ts",
   "admin.config.ts",
   "src/admin.config.ts",
   "src/config/adminforge.ts"
@@ -38,8 +39,6 @@ const isMigrate = command === "migrate";
 
 if (isMakemigrations || isMigrate) {
   // We need to generate the Prisma schema first.
-  // We'll write a temporary TS file to execute the generation using tsx,
-  // since the config is in TypeScript.
   const tempScriptPath = path.resolve(process.cwd(), ".adminforge-runner.ts");
   
   const runnerContent = `
@@ -60,7 +59,6 @@ if (existsSync(schemaPath)) {
 }
 
 const schema = generatePrismaSchema(config, { provider });
-// Create prisma dir if it doesn't exist
 const prismaDir = resolve(process.cwd(), "prisma");
 if (!existsSync(prismaDir)) {
   mkdirSync(prismaDir);
@@ -82,12 +80,18 @@ console.log("Generated Prisma schema at prisma/schema.prisma (provider: " + prov
       execSync(`npx prisma migrate dev --name "${name}" --create-only`, { stdio: "inherit" });
       console.log(`Created migration: ${name}`);
     } else if (isMigrate) {
-      execSync("npx prisma migrate dev", { stdio: "inherit" });
+      if (args.includes("--push")) {
+        execSync("npx prisma db push", { stdio: "inherit" });
+      } else if (args.includes("--deploy")) {
+        execSync("npx prisma migrate deploy", { stdio: "inherit" });
+      } else {
+        execSync("npx prisma migrate dev", { stdio: "inherit" });
+      }
       execSync("npx prisma generate", { stdio: "inherit" });
-      console.log("Applied migrations and generated client.");
+      console.log("Applied changes and generated client.");
     }
   } catch (error) {
-    console.error("Error executing command");
+    console.error("Error executing command", error);
   } finally {
     if (fs.existsSync(tempScriptPath)) {
       fs.unlinkSync(tempScriptPath);

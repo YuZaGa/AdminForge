@@ -66,40 +66,18 @@ export const config = defineConfig({
 
 ## 3. Generate Prisma Schema & Migrate
 
-Create `scripts/migrate.ts`:
-
-```ts
-import { generatePrismaSchema } from "adminforge";
-import { config } from "../adminforge";
-import { writeFileSync } from "fs";
-import { resolve } from "path";
-import { execSync } from "child_process";
-
-const schemaPath = resolve(process.cwd(), "prisma/schema.prisma");
-const schema = generatePrismaSchema(config, { provider: "sqlite" });
-writeFileSync(schemaPath, schema);
-console.log("Generated Prisma schema at prisma/schema.prisma");
-
-execSync("prisma generate", { stdio: "inherit" });
-
-const args = process.argv.slice(2);
-if (args.includes("--push")) {
-  execSync("prisma db push", { stdio: "inherit" });
-} else if (args.includes("--name")) {
-  const name = args[args.indexOf("--name") + 1];
-  execSync(`prisma migrate dev --name "${name}"`, { stdio: "inherit" });
-} else {
-  execSync("prisma migrate dev", { stdio: "inherit" });
-}
-```
-
-Run it:
+AdminForge generates your database schema directly from your TypeScript config. To sync your database, run:
 
 ```bash
-npx tsx scripts/migrate.ts --push
+npx adminforge migrate --push
 ```
 
-This generates `prisma/schema.prisma` from your `adminforge.ts` config, generates the Prisma client, and syncs the database. Iterate by editing `adminforge.ts` and re-running.
+This command:
+1.  **Generates** `prisma/schema.prisma` from your `adminforge.ts`.
+2.  **Syncs** your database using `prisma db push` (perfect for local development).
+3.  **Generates** the Prisma client so you can start querying data.
+
+For production environments, you can use `npx adminforge migrate` (without `--push`) to create and run standard Prisma migrations.
 
 ## 4. Create Database Client
 
