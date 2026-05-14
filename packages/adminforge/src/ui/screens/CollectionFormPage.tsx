@@ -28,7 +28,7 @@ function formatDate(date: Date) {
 
 export function CollectionFormPage({ config, collection, record, isNew, role: propRole }: CollectionFormPageProps) {
   const session = useAdminSession();
-  const role = propRole || session.role || session.user?.role;
+  const role = propRole || session?.role || session?.user?.role;
 
   return (
     <AdminLayout config={config} currentPath={`/admin/${collection.name}`} role={role}>

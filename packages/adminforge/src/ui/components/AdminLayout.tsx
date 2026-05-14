@@ -36,7 +36,7 @@ export function AdminLayout({ config, children, currentPath, role }: AdminLayout
           </li>
           {config.collections.map((collection) => {
             const a = collection.access;
-            if (a?.read && role && !a.read.includes(role)) return null;
+            if (a?.read && (!role || !a.read.includes(role))) return null;
             const href = `/admin/${collection.name}`;
             const icon = collection.icon || "database";
             return (

@@ -7,6 +7,8 @@ export default defineConfig({
     index: "src/index.ts",
     ui: "src/ui.ts",
     next: "src/next.ts",
+    auth: "src/auth/index.ts",
+    "auth-client": "src/auth/provider.tsx",
     styles: "src/styles/adminforge.css",
   },
 

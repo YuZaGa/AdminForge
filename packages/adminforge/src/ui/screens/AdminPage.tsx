@@ -63,7 +63,7 @@ function CollectionActivity({ activity }: { activity?: { createdAt: string, upda
 
 export function AdminPage({ config, role: propRole }: AdminPageProps) {
   const session = useAdminSession();
-  const role = propRole || session.role || session.user?.role;
+  const role = propRole || session?.role || session?.user?.role;
   const schemaActivity = config.collections?.[0] && (config.collections[0] as any)?.schemaActivity;
 
   return (
@@ -113,7 +113,9 @@ export function AdminPage({ config, role: propRole }: AdminPageProps) {
               {config.collections
                 .filter((collection) => {
                   const a = collection.access;
-                  return !a?.read || !role || a.read.includes(role);
+                  if (!a?.read) return true;
+                  if (!role) return false;
+                  return a.read.includes(role);
                 })
                 .map((collection) => {
                   return (

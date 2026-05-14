@@ -204,6 +204,41 @@ export function createAdminForgeApi({ config, db, auth }: RouteParams) {
           }, 201);
         }
 
+        // Handle Agent Token Generation
+        if (slug[0] === "_tokens") {
+          const { generateAgentToken } = await import("./security/agent-auth.js");
+          const body = await request.json();
+          const { scope, expiresIn = 600 } = body;
+
+          if (!Array.isArray(scope)) {
+            return jsonResponse({ error: "Scope must be an array" }, 400);
+          }
+
+          // Validation: Ensure collections exist
+          for (const s of scope) {
+            const [collection, action] = s.split(":");
+            const exists = config.collections.find(c => c.name === collection);
+            if (!exists) return jsonResponse({ error: `Invalid collection: ${collection}` }, 400);
+            if (!["create", "read", "update", "delete"].includes(action)) {
+              return jsonResponse({ error: `Invalid action: ${action}` }, 400);
+            }
+          }
+
+          // Auth: Get session
+          let userId = "admin";
+          let role = "admin";
+          if (auth) {
+            const session = await auth();
+            if (session?.user) {
+              userId = session.user.id || session.user.email;
+              role = (session as any).role || "admin";
+            }
+          }
+
+          const token = generateAgentToken(userId, role, scope, expiresIn);
+          return jsonResponse({ token });
+        }
+
         const { handlers } = getCollectionAndId(slug);
         return handlers.POST(request);
       } catch (err) {

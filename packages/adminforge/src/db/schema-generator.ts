@@ -24,14 +24,7 @@ export function generatePrismaSchema(
   lines.push("");
   lines.push("datasource db {");
   lines.push(`  provider = "${provider}"`);
-  
-  // For SQLite, if no DATABASE_URL is set, default to file:./dev.db for better Zero-Config DX
-  const url = process.env.DATABASE_URL || (provider === "sqlite" ? "file:./dev.db" : undefined);
-  if (url) {
-    lines.push(`  url      = "${url}"`);
-  } else {
-    lines.push('  url      = env("DATABASE_URL")');
-  }
+  lines.push('  url      = env("DATABASE_URL")');
   lines.push("}");
   lines.push("");
 

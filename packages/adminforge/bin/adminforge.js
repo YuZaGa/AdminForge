@@ -37,6 +37,11 @@ if (!configPath) {
 const isMakemigrations = command === "makemigrations";
 const isMigrate = command === "migrate";
 
+// Provide default DATABASE_URL if missing for SQLite Zero-Config
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "file:./dev.db";
+}
+
 if (isMakemigrations || isMigrate) {
   // We need to generate the Prisma schema first.
   const tempScriptPath = path.resolve(process.cwd(), ".adminforge-runner.ts");

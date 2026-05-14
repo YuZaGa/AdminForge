@@ -29,7 +29,7 @@ function hasAccess(access: AccessConfig | undefined, operation: string, role?: s
 export function CollectionListPage({ config, collection, data, total, page, pageSize, role: propRole }: CollectionListPageProps) {
   const router = useRouter();
   const session = useAdminSession();
-  const role = propRole || session.role || session.user?.role;
+  const role = propRole || session?.role || session?.user?.role;
   
   const [searchQuery, setSearchQuery] = useState("");
   const canCreate = hasAccess(collection.access, "create", role);

@@ -6,6 +6,7 @@ export { CollectionFormPage } from "./screens/CollectionFormPage.js";
 export { CollectionSchemaPage } from "./screens/CollectionSchemaPage.js";
 export { RolesListPage } from "./screens/RolesListPage.js";
 export { RoleDetailPage } from "./screens/RoleDetailPage.js";
+export { AgentTokenPage } from "./screens/AgentTokenPage.js";
 export { FormEngine } from "./form-engine/FormEngine.js";
 export { TableEngine } from "./table-engine/TableEngine.js";
 export { RichTextEditor } from "./form-engine/RichTextEditor.js";

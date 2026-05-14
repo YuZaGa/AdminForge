@@ -30,6 +30,16 @@
       "import": "./dist/next.js",
       "require": "./dist/next.cjs"
     },
+    "./auth": {
+      "types": "./dist/auth.d.ts",
+      "import": "./dist/auth.js",
+      "require": "./dist/auth.cjs"
+    },
+    "./auth-client": {
+      "types": "./dist/auth-client.d.ts",
+      "import": "./dist/auth-client.js",
+      "require": "./dist/auth-client.cjs"
+    },
     "./styles": "./dist/styles.css"
   },
   "main": "./dist/index.js",
