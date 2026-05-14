@@ -11,6 +11,11 @@ function buildValidationSchema(collection: CollectionDefinition): z.ZodObject<Re
   return z.object(shape);
 }
 
+interface AdminSession {
+  user: { id: string; email: string; role?: string } | null;
+  role?: string; // Support for root-level role
+}
+
 function hasAccess(access: AccessConfig | undefined, operation: string, role?: string): boolean {
   if (!access) return true;
   const allowed = access[operation as keyof AccessConfig];
@@ -154,8 +159,13 @@ export function createController(
       const combinedWhere = searchWhere ? { ...where, ...searchWhere } : where;
       
       const skip = (page - 1) * pageSize;
+      
+      // Default sorting to newest first. 
+      // We check for 'createdAt' but default to 'id' desc as a safe fallback for all DBs.
+      const effectiveOrderBy = orderBy || (collection.fields.createdAt ? { createdAt: 'desc' } : { id: 'desc' });
+
       const [raw, total] = await Promise.all([
-        db.findMany(collection.name, { where: combinedWhere, orderBy, skip, take: pageSize }),
+        db.findMany(collection.name, { where: combinedWhere, orderBy: effectiveOrderBy, skip, take: pageSize }),
         db.count(collection.name, { where: combinedWhere })
       ]);
       

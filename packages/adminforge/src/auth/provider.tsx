@@ -3,7 +3,8 @@
 import { createContext, useContext } from "react";
 
 interface AdminSession {
-  user: { id: string; email: string } | null;
+  user: { id: string; email: string; role?: string } | null;
+  role?: string;
 }
 
 const AdminSessionContext = createContext<AdminSession>({ user: null });

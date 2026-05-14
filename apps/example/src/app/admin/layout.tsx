@@ -1,14 +1,19 @@
-import { AdminForgeProvider } from "@adminforge/core/ui";
+import { AdminForgeProvider, AuthProvider } from "@adminforge/core/ui";
+import { auth } from "../../lib/auth";
 import "@adminforge/core/styles";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
-    <AdminForgeProvider>
-      {children}
-    </AdminForgeProvider>
+    <AuthProvider session={session as any}>
+      <AdminForgeProvider>
+        {children}
+      </AdminForgeProvider>
+    </AuthProvider>
   );
 }

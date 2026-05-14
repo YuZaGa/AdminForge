@@ -9,6 +9,7 @@ import { RolesListPage } from "./screens/RolesListPage.js";
 import { RoleDetailPage } from "./screens/RoleDetailPage.js";
 import type { AdminForgeConfig } from "../core/index.js";
 import { useAdminForge, AdminForgeProvider } from "./AdminForgeContext.js";
+import { useSearchParams } from "next/navigation.js";
 
 interface AdminDashboardProps {
   config?: AdminForgeConfig;
@@ -20,6 +21,8 @@ export function AdminDashboard({ config: initialConfig, params: initialParams, a
   const ctx = useAdminForge();
   const config = initialConfig ?? ctx.config;
   const apiBase = initialApiBase ?? ctx.apiBase;
+  const searchParams = useSearchParams();
+  const queryStr = searchParams.toString();
 
   const [adminParams, setAdminParams] = React.useState<string[]>(initialParams?.admin || []);
   const [data, setData] = React.useState<any>(null);
@@ -36,22 +39,32 @@ export function AdminDashboard({ config: initialConfig, params: initialParams, a
   const [segment, actionOrId] = adminParams;
 
   React.useEffect(() => {
-    if (!config) return;
+    if (!config || !segment) return;
     const isCollection = config.collections.some((c: any) => c.name === segment);
     if (!isCollection) return;
 
+    const query = queryStr ? `?${queryStr}` : "";
+
     if (!actionOrId) {
-      fetch(`${apiBase}/${segment}`)
-        .then(res => res.ok ? res.json() : Promise.reject(`${res.status} ${res.statusText}`))
+      fetch(`${apiBase}/${segment}${query}`)
+        .then(async res => {
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          const text = await res.text();
+          return text ? JSON.parse(text) : {};
+        })
         .then(res => setData(res))
         .catch(e => console.error(`[AdminForge] Failed to fetch ${apiBase}/${segment}:`, e));
     } else if (actionOrId !== "new" && actionOrId !== "schema") {
-      fetch(`${apiBase}/${segment}/${actionOrId}`)
-        .then(res => res.ok ? res.json() : Promise.reject(`${res.status} ${res.statusText}`))
+      fetch(`${apiBase}/${segment}/${actionOrId}${query}`)
+        .then(async res => {
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          const text = await res.text();
+          return text ? JSON.parse(text) : {};
+        })
         .then(res => setRecord(res))
         .catch(e => console.error(`[AdminForge] Failed to fetch ${apiBase}/${segment}/${actionOrId}:`, e));
     }
-  }, [segment, actionOrId, apiBase, config]);
+  }, [segment, actionOrId, apiBase, config, queryStr]);
 
   if (!config) return null;
 

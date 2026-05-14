@@ -4,6 +4,7 @@ import type { AdminForgeConfig, CollectionDefinition } from "../../core";
 import { AdminLayout } from "../components/AdminLayout.js";
 import { FormEngine } from "../form-engine/FormEngine.js";
 import Link from "next/link";
+import { useAdminSession } from "../../auth/provider.js";
 
 interface CollectionFormPageProps {
   config: AdminForgeConfig;
@@ -25,7 +26,10 @@ function formatDate(date: Date) {
   });
 }
 
-export function CollectionFormPage({ config, collection, record, isNew, role }: CollectionFormPageProps) {
+export function CollectionFormPage({ config, collection, record, isNew, role: propRole }: CollectionFormPageProps) {
+  const session = useAdminSession();
+  const role = propRole || session.role || session.user?.role;
+
   return (
     <AdminLayout config={config} currentPath={`/admin/${collection.name}`} role={role}>
       <div className="adminforge-collection-page">
