@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useAdminForge } from "../AdminForgeContext.js";
 
 interface ImageUploadProps {
   name: string;
@@ -9,6 +10,7 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ name, value, onChange }: ImageUploadProps) {
+  const { apiBase } = useAdminForge();
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(value ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,7 +24,7 @@ export function ImageUpload({ name, value, onChange }: ImageUploadProps) {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/upload", {
+      const res = await fetch(`${apiBase}/_media`, {
         method: "POST",
         body: formData,
       });

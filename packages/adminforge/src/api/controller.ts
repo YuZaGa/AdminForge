@@ -77,7 +77,7 @@ export function createController(
 
     return {
       OR: searchFields.map(field => ({
-        [field]: { contains: search }
+        [field]: { contains: search, mode: 'insensitive' }
       }))
     };
   }
@@ -131,7 +131,16 @@ export function createController(
       if (typeof from !== "string") continue;
       const source = next[from];
       if (typeof source !== "string" || source.trim().length === 0) continue;
-      next[name] = source.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      const slugified = source
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Remove accents
+        .replace(/\s+/g, "-")           // Replace spaces with -
+        .replace(/[^a-z0-9-]/g, "")     // Remove non-alphanumeric
+        .replace(/-+/g, "-")            // Remove double dashes
+        .replace(/^-+|-+$/g, "");       // Trim dashes
+
+      next[name] = slugified;
     }
     return next;
   }

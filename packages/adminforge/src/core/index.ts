@@ -32,3 +32,12 @@ export type {
   DateOptions,
   ImageOptions,
 } from "./types/index.js";
+
+/**
+ * Utility type to infer the record structure from a CollectionDefinition.
+ */
+export type InferRecord<T extends { fields: Record<string, any> }> = {
+  id: string;
+} & {
+  [K in keyof T["fields"]]: any; // We'll refine this in the future with proper field-to-type mapping
+};

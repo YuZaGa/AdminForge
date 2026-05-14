@@ -78,7 +78,11 @@ export function createRouteHandlers({ config, db }: RouteParams) {
           const result = await controller.create(body);
           return jsonResponse(result, 201);
         } catch (err) {
-          const error = err as Error;
+          const error = err as any;
+          if (error.name === "ZodError") {
+            const issues = error.issues.map((i: any) => `${i.path.join(".")}: ${i.message}`).join(", ");
+            return jsonResponse({ error: `Validation failed: ${issues}` }, 400);
+          }
           return jsonResponse({ error: error.message }, 400);
         }
       },
@@ -93,7 +97,11 @@ export function createRouteHandlers({ config, db }: RouteParams) {
           const result = await controller.update(params.id, body);
           return jsonResponse(result);
         } catch (err) {
-          const error = err as Error;
+          const error = err as any;
+          if (error.name === "ZodError") {
+            const issues = error.issues.map((i: any) => `${i.path.join(".")}: ${i.message}`).join(", ");
+            return jsonResponse({ error: `Validation failed: ${issues}` }, 400);
+          }
           return jsonResponse({ error: error.message }, 400);
         }
       },
@@ -140,6 +148,34 @@ export function createAdminForgeApi({ config, db }: RouteParams) {
     async POST(request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
       try {
         const { slug } = await params;
+        
+        // Handle Media Uploads
+        if (slug[0] === "_media") {
+          const formData = await request.formData();
+          const file = formData.get("file") as File;
+          if (!file) return jsonResponse({ error: "No file uploaded" }, 400);
+
+          const bytes = await file.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+
+          const path = await import("path");
+          const fs = await import("fs/promises");
+          const uploadDir = path.join(process.cwd(), "public", "uploads");
+          
+          try {
+            await fs.mkdir(uploadDir, { recursive: true });
+          } catch {}
+
+          const filename = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+          const filePath = path.join(uploadDir, filename);
+          await fs.writeFile(filePath, buffer);
+
+          return jsonResponse({ 
+            url: `/uploads/${filename}`,
+            filename
+          }, 201);
+        }
+
         const { handlers } = getCollectionAndId(slug);
         return handlers.POST(request);
       } catch (err) {

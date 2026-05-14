@@ -22,6 +22,7 @@ import { defineConfig, collection, fields } from "adminforge";
 - `defineConfig(config)` — Creates an `AdminForgeConfig` from collections and auth settings
 - `collection(input)` — Creates a `CollectionDefinition` with name, label, fields, hooks, and access
 - `fields` — Object with field builders: `text`, `boolean`, `richText`, `slug`, `relation`, `date`, `image`
+- `type Record = InferRecord<typeof myCollection>` — Utility to infer the TypeScript type of a record
 
 ### Types
 
