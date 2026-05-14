@@ -1,6 +1,6 @@
-import { type AdminForgeConfig, type CollectionDefinition } from "adminforge";
-import { type DbClient } from "adminforge";
-import { createController } from "adminforge/next";
+import { type AdminForgeConfig, type CollectionDefinition } from "@adminforge/core";
+import { type DbClient } from "@adminforge/core";
+import { createController } from "@adminforge/core/next";
 import { z } from "zod";
 
 /**

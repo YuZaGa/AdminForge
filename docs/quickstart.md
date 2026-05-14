@@ -5,10 +5,12 @@
 ```bash
 npx create-next-app@latest my-admin --typescript
 cd my-admin
-npm install adminforge @prisma/client next-auth
+npm install @adminforge/core @prisma/client next-auth
 npm install --save-dev prisma tsx
-npx prisma init
 ```
+
+> [!TIP]
+> You don't need to run `npx prisma init`. AdminForge manages your schema and folder structure automatically.
 
 ## 1. Configure next.config.ts
 
@@ -19,7 +21,7 @@ Next.js needs to transpile the adminforge package (it contains JSX):
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["adminforge"],
+  transpilePackages: ["@adminforge/core"],
 };
 
 export default nextConfig;
@@ -30,7 +32,7 @@ export default nextConfig;
 Create `adminforge.ts` in your project root:
 
 ```ts
-import { defineConfig, collection, fields } from "adminforge";
+import { defineConfig, collection, fields } from "@adminforge/core";
 
 export const config = defineConfig({
   collections: [
@@ -72,6 +74,9 @@ AdminForge generates your database schema directly from your TypeScript config. 
 npx adminforge migrate --push
 ```
 
+> [!IMPORTANT]
+> Ensure your `DATABASE_URL` is set in your `.env` file. For SQLite, use `DATABASE_URL="file:./dev.db"`.
+
 This command:
 1.  **Generates** `prisma/schema.prisma` from your `adminforge.ts`.
 2.  **Syncs** your database using `prisma db push` (perfect for local development).
@@ -84,7 +89,7 @@ For production environments, you can use `npx adminforge migrate` (without `--pu
 ```ts
 // lib/adminforge.ts
 import { config } from "../adminforge";
-import { createDbClient } from "adminforge";
+import { createDbClient } from "@adminforge/core";
 
 export function getConfig() {
   return config;
@@ -98,11 +103,11 @@ export function getDb() {
 
 ## 5. Mount API Routes
 
-Create a catch-all route at `app/api/admin/[...admin]/route.ts`:
+Create a catch-all route at `app/api/[...slug]/route.ts`:
 
 ```ts
-// app/api/admin/[...admin]/route.ts
-import { createAdminForgeApi } from "adminforge/next";
+// app/api/[...slug]/route.ts
+import { createAdminForgeApi } from "@adminforge/core/next";
 import { getConfig, getDb } from "@/lib/adminforge";
 
 const config = getConfig();
@@ -117,28 +122,28 @@ This single line handles all CRUD operations, searching, and security for every 
 
 ```ts
 // app/admin/layout.tsx
-import type { Metadata } from "next";
-import "adminforge/styles";
-
-export const metadata: Metadata = {
-  title: "Admin Dashboard",
-};
+import { AdminForgeProvider } from "@adminforge/core/ui";
+import "@adminforge/core/styles";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="en"><body>{children}</body></html>;
+  return (
+    <html lang="en">
+      <body>
+        <AdminForgeProvider>
+          {children}
+        </AdminForgeProvider>
+      </body>
+    </html>
+  );
 }
 ```
 
 ```ts
 // app/admin/[[...admin]]/page.tsx
-import { AdminDashboard } from "adminforge/ui";
-import { getConfig } from "@/lib/adminforge";
+import { AdminDashboard } from "@adminforge/core/ui";
 
-export default async function Dashboard({ params }: { params: Promise<{ admin?: string[] }> }) {
-  const config = getConfig();
-  const resolvedParams = await params;
-  
-  return <AdminDashboard config={config} params={resolvedParams} />;
+export default function Dashboard() {
+  return <AdminDashboard />;
 }
 ```
 

@@ -10,6 +10,7 @@ export { FormEngine } from "./form-engine/FormEngine.js";
 export { TableEngine } from "./table-engine/TableEngine.js";
 export { RichTextEditor } from "./form-engine/RichTextEditor.js";
 export { ImageUpload } from "./form-engine/ImageUpload.js";
+export { AdminForgeProvider, useAdminForge } from "./AdminForgeContext.js";
 
 // Auth Client
 export { AuthProvider, useAdminSession } from "../auth/provider.js";

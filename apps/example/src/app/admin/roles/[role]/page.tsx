@@ -1,7 +1,7 @@
 "use client";
 
-import { RoleDetailPage } from "adminforge/ui";
-import type { AdminForgeConfig } from "adminforge";
+import { RoleDetailPage } from "@adminforge/core/ui";
+import type { AdminForgeConfig } from "@adminforge/core";
 import { useConfig } from "../../../../lib/use-config";
 import { use } from "react";
 

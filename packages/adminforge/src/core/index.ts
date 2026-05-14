@@ -1,6 +1,6 @@
 export { defineConfig } from "./schema/config.js";
 export { collection } from "./schema/collection.js";
-export { normalize } from "./schema/normalize.js";
+export { normalize, serializeConfig } from "./schema/normalize.js";
 export type { NormalizedSchema } from "./schema/normalize.js";
 export { fields } from "./fields/index.js";
 export { registerField, getField, getRegisteredFields, clearRegistry } from "./registry/index.js";

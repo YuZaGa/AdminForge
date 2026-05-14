@@ -5,7 +5,7 @@
 The top-level configuration builder.
 
 ```ts
-import { defineConfig, collection, fields } from "adminforge";
+import { defineConfig, collection, fields } from "@adminforge/core";
 
 export const config = defineConfig({
   collections: [...],
@@ -158,7 +158,7 @@ fields.text({
 You can register custom field types:
 
 ```ts
-import { registerField, getField } from "adminforge";
+import { registerField, getField } from "@adminforge/core";
 
 registerField("markdown", {
   type: "markdown",

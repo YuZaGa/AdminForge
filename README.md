@@ -11,9 +11,12 @@ Define your data schema in `adminforge.ts`, run a few commands, and get a fully 
 
 ```bash
 npx create-next-app@latest my-app && cd my-app
-npm install adminforge @prisma/client next-auth
-npx prisma init
+npm install @adminforge/core @prisma/client next-auth
+npx adminforge migrate --push
 ```
+
+### 0.3.0 Release: Elite DX
+The latest version introduces **Self-Configuring UI**. Just add the provider to your layout and drop the dashboard into any page. No manual serialization required.
 
 See the [Quickstart](docs/quickstart.md) to get running in 5 minutes.
 

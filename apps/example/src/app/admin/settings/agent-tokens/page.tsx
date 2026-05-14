@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AdminLayout } from "adminforge/ui";
-import type { AdminForgeConfig } from "adminforge";
+import { AdminLayout } from "@adminforge/core/ui";
+import type { AdminForgeConfig } from "@adminforge/core";
 import { useConfig } from "../../../../lib/use-config";
 
 export default function AgentTokensPage() {

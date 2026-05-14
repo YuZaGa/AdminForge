@@ -4,19 +4,19 @@
 
 | Import Path | Contents | Environment |
 |-------------|----------|-------------|
-| `adminforge` | Core schema, fields, DB client | Node.js |
-| `adminforge/next` | API controller, route handlers, auth, agent tokens | Node.js |
-| `adminforge/ui` | Admin dashboard UI components | React (client) |
-| `adminforge/styles` | Admin dashboard stylesheet | CSS |
+| `@adminforge/core` | Core schema, fields, DB client | Node.js |
+| `@adminforge/core/next` | API controller, route handlers, auth, agent tokens | Node.js |
+| `@adminforge/core/ui` | Admin dashboard UI components | React (client) |
+| `@adminforge/core/styles` | Admin dashboard stylesheet | CSS |
 
 ---
 
-## adminforge
+## @adminforge/core
 
 ### Schema Builders
 
 ```ts
-import { defineConfig, collection, fields } from "adminforge";
+import { defineConfig, collection, fields, type InferRecord } from "@adminforge/core";
 ```
 
 - `defineConfig(config)` — Creates an `AdminForgeConfig` from collections and auth settings
@@ -47,14 +47,14 @@ import type {
   FieldUI,
   FieldHooks,
   FieldMeta,
-} from "adminforge";
+} from "@adminforge/core";
 ```
 
 ### DB Client
 
 ```ts
-import { createDbClient } from "adminforge";
-import type { DbClient } from "adminforge";
+import { createAdminForgeApi, verifyAgentToken } from "@adminforge/core/next";
+import type { DbClient } from "@adminforge/core";
 
 const db = createDbClient(config, existingPrismaClient?);
 
@@ -69,7 +69,7 @@ db.count(collectionName, { where });
 ### Field Registry
 
 ```ts
-import { registerField, getField, getRegisteredFields, clearRegistry } from "adminforge";
+import { registerField, getField, getRegisteredFields, clearRegistry } from "@adminforge/core";
 
 registerField("customType", definition);
 const field = getField("customType");
@@ -85,21 +85,21 @@ import {
   executeAfterUpdate,
   executeBeforeDelete,
   executeAfterDelete,
-} from "adminforge";
+} from "@adminforge/core";
 ```
 
 ### Utilities
 
 ```ts
-import { normalize } from "adminforge";
+import { normalize } from "@adminforge/core";
 // Normalizes config (fills defaults for labels, auth, etc.)
 ```
 
 ---
 
-## adminforge/next
+## @adminforge/core/next
 
-### Next.js Helpers (`adminforge/next`)
+### Next.js Helpers (`@adminforge/core/next`)
 
 #### `createAdminForgeApi({ config, db })`
 
@@ -118,7 +118,7 @@ Verifies an AI agent JWT and returns the payload.
 
 Low-level controller for manual API implementations.
 
-### UI Entry Point (`adminforge/ui`)
+### UI Entry Point (npm install @adminforge/core /ui`)
 
 #### `AdminDashboard`
 
@@ -131,7 +131,7 @@ The primary React entry point. Handles internal routing and data fetching automa
 
 ---
 
-## adminforge/ui
+## @adminforge/core/ui
 
 ### Screens
 
@@ -143,7 +143,7 @@ import {
   CollectionSchemaPage,   // Schema viewer for a collection
   RolesListPage,          // Role management list
   RoleDetailPage,         // Role detail view
-} from "adminforge/ui";
+} from "@adminforge/core/ui";
 ```
 
 ### Components
@@ -155,13 +155,13 @@ import {
   TableEngine,      // Generic data table with sorting/pagination
   RichTextEditor,   // Full-featured Tiptap editor
   ImageUpload,      // Image upload component
-} from "adminforge/ui";
+} from "@adminforge/core/ui";
 ```
 
 ### Auth (Client)
 
 ```ts
-import { AuthProvider, useAdminSession } from "adminforge/ui";
+import { AuthProvider, useAdminSession } from "@adminforge/core/ui";
 ```
 
 - `AuthProvider` — React context provider wrapping the app

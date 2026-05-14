@@ -42,7 +42,7 @@ if (isMakemigrations || isMigrate) {
   const tempScriptPath = path.resolve(process.cwd(), ".adminforge-runner.ts");
   
   const runnerContent = `
-import { generatePrismaSchema } from "adminforge";
+import { generatePrismaSchema } from "@adminforge/core";
 import { config } from "./${configPath.replace(".ts", "")}";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { resolve } from "path";

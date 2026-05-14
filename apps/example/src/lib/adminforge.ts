@@ -1,5 +1,5 @@
 import { config } from "../config/adminforge";
-import { createDbClient } from "adminforge";
+import { createDbClient } from "@adminforge/core";
 
 export function getConfig() {
   return config;

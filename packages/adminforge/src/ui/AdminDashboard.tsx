@@ -8,76 +8,75 @@ import { CollectionSchemaPage } from "./screens/CollectionSchemaPage.js";
 import { RolesListPage } from "./screens/RolesListPage.js";
 import { RoleDetailPage } from "./screens/RoleDetailPage.js";
 import type { AdminForgeConfig } from "../core/index.js";
-import { AdminForgeProvider } from "./AdminForgeContext.js";
+import { useAdminForge, AdminForgeProvider } from "./AdminForgeContext.js";
 
 interface AdminDashboardProps {
-  config: AdminForgeConfig;
-  params: { admin?: string[] };
+  config?: AdminForgeConfig;
+  params?: { admin?: string[] };
   apiBase?: string;
 }
 
-export function AdminDashboard({ config, params, apiBase = "/api/admin" }: AdminDashboardProps) {
-  const adminParams = params.admin || [];
-  const [segment, subSegment, id] = adminParams;
+export function AdminDashboard({ config: initialConfig, params: initialParams, apiBase: initialApiBase }: AdminDashboardProps) {
+  const ctx = useAdminForge();
+  const config = initialConfig ?? ctx.config;
+  const apiBase = initialApiBase ?? ctx.apiBase;
+
+  const [adminParams, setAdminParams] = React.useState<string[]>(initialParams?.admin || []);
   const [data, setData] = React.useState<any>(null);
   const [record, setRecord] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(false);
 
-  // Data fetcher for the dashboard
   React.useEffect(() => {
-    // List fetch
-    if (segment === "collections" && subSegment && !id) {
-      setLoading(true);
-      fetch(`${apiBase}/${subSegment}`)
-        .then(res => res.json())
-        .then(res => {
-          setData(res);
-          setLoading(false);
-        });
+    if (!initialParams && typeof window !== "undefined") {
+      const path = window.location.pathname;
+      const segments = path.split("/admin/").pop()?.split("/") || [];
+      setAdminParams(segments.filter(Boolean));
     }
-    // Single record fetch for Edit
-    if (segment === "collections" && subSegment && id && id !== "new" && id !== "schema") {
-      setLoading(true);
-      fetch(`${apiBase}/${subSegment}/${id}`)
-        .then(res => res.json())
-        .then(res => {
-          setRecord(res);
-          setLoading(false);
-        });
+  }, [initialParams]);
+
+  const [segment, actionOrId] = adminParams;
+
+  React.useEffect(() => {
+    if (!config) return;
+    const isCollection = config.collections.some((c: any) => c.name === segment);
+    if (!isCollection) return;
+
+    if (!actionOrId) {
+      fetch(`${apiBase}/${segment}`)
+        .then(res => res.ok ? res.json() : Promise.reject(`${res.status} ${res.statusText}`))
+        .then(res => setData(res))
+        .catch(e => console.error(`[AdminForge] Failed to fetch ${apiBase}/${segment}:`, e));
+    } else if (actionOrId !== "new" && actionOrId !== "schema") {
+      fetch(`${apiBase}/${segment}/${actionOrId}`)
+        .then(res => res.ok ? res.json() : Promise.reject(`${res.status} ${res.statusText}`))
+        .then(res => setRecord(res))
+        .catch(e => console.error(`[AdminForge] Failed to fetch ${apiBase}/${segment}/${actionOrId}:`, e));
     }
-  }, [segment, subSegment, id, apiBase]);
+  }, [segment, actionOrId, apiBase, config]);
 
-  const content = () => {
-    if (loading) return <AdminLayout config={config}><div style={{ padding: '40px' }}>Loading...</div></AdminLayout>;
+  if (!config) return null;
 
-    // Root /admin
-    if (adminParams.length === 0) {
-      return <AdminPage config={config} />;
-    }
+  const renderContent = () => {
+    if (adminParams.length === 0) return <AdminPage config={config} />;
 
-    // /admin/roles
     if (segment === "roles") {
-      if (subSegment) return <RoleDetailPage config={config} roleId={subSegment} />;
+      if (actionOrId) return <RoleDetailPage config={config} roleId={actionOrId} />;
       return <RolesListPage config={config} />;
     }
 
-    // /admin/collections/[name]
-    if (segment === "collections" && subSegment) {
-      const collection = config.collections.find(c => c.name === subSegment);
-      if (!collection) return <AdminLayout config={config}><div>Collection {subSegment} not found</div></AdminLayout>;
+    const collection = config.collections.find((c: any) => c.name === segment);
+    if (collection) {
+      if (actionOrId === "new") return <CollectionFormPage config={config} collection={collection} isNew />;
+      if (actionOrId === "schema") return <CollectionSchemaPage config={config} collection={collection} />;
+      if (actionOrId) return <CollectionFormPage config={config} collection={collection} isNew={false} record={record} />;
 
-      if (id === "new") return <CollectionFormPage config={config} collection={collection} isNew />;
-      if (id === "schema") return <CollectionSchemaPage config={config} collection={collection} />;
-      if (id) return <CollectionFormPage config={config} collection={collection} isNew={false} record={record} />;
-      
       return (
-        <CollectionListPage 
-          config={config} 
-          collection={collection} 
-          data={data?.data || []} 
-          total={data?.total || 0} 
-          page={data?.page || 1} 
-          pageSize={data?.pageSize || 10} 
+        <CollectionListPage
+          config={config}
+          collection={collection}
+          data={data?.data || []}
+          total={data?.total || 0}
+          page={data?.page || 1}
+          pageSize={data?.pageSize || 10}
         />
       );
     }
@@ -87,7 +86,7 @@ export function AdminDashboard({ config, params, apiBase = "/api/admin" }: Admin
 
   return (
     <AdminForgeProvider config={config} apiBase={apiBase}>
-      {content()}
+      {renderContent()}
     </AdminForgeProvider>
   );
 }

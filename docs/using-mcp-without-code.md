@@ -30,7 +30,7 @@ The MCP server exposes these tools that an AI agent can call:
 
 ## Prerequisites
 
-- An existing AdminForge project (any project using the `adminforge` package)
+- An existing AdminForge project (any project using the `@adminforge/core` package)
 - Node.js 18+
 
 ## Step 1: Install the AI Package

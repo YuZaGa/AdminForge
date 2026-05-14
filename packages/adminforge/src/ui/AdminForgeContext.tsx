@@ -4,21 +4,31 @@ import React, { createContext, useContext } from "react";
 import type { AdminForgeConfig } from "../core/index.js";
 
 interface AdminForgeContextType {
-  config: AdminForgeConfig;
+  config: AdminForgeConfig | undefined;
   apiBase: string;
 }
 
-const AdminForgeContext = createContext<AdminForgeContextType | undefined>(undefined);
+const AdminForgeContext = createContext<AdminForgeContextType>({ config: undefined, apiBase: "/api" });
 
 export function AdminForgeProvider({ 
   children, 
-  config, 
-  apiBase 
+  config: initialConfig, 
+  apiBase = "/api" 
 }: { 
   children: React.ReactNode; 
-  config: AdminForgeConfig;
-  apiBase: string;
+  config?: AdminForgeConfig;
+  apiBase?: string;
 }) {
+  const [config, setConfig] = React.useState<AdminForgeConfig | undefined>(initialConfig);
+
+  React.useEffect(() => {
+    if (!config) {
+      fetch(`${apiBase}/_config`)
+        .then(res => res.ok ? res.json() : null)
+        .then(cfg => cfg?.collections ? setConfig(cfg) : null);
+    }
+  }, [config, apiBase]);
+
   return (
     <AdminForgeContext.Provider value={{ config, apiBase }}>
       {children}
@@ -27,9 +37,5 @@ export function AdminForgeProvider({
 }
 
 export function useAdminForge() {
-  const context = useContext(AdminForgeContext);
-  if (!context) {
-    throw new Error("useAdminForge must be used within an AdminForgeProvider");
-  }
-  return context;
+  return useContext(AdminForgeContext);
 }

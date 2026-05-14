@@ -36,7 +36,7 @@ The `--push` flag ensures that any project already using this package via yalc w
 Go to your external project (e.g., a new Next.js app) and add the packages:
 
 ```bash
-yalc add adminforge
+yalc add @adminforge/core
 yalc add @adminforge/ai
 
 # Install the actual dependencies
@@ -60,6 +60,6 @@ Your test project will now have the latest version!
 If you don't want to use `yalc`, you can use the built-in linking:
 
 1. In `packages/adminforge`, run `pnpm link --global`.
-2. In your test project, run `pnpm link --global adminforge`.
+2. In your test project, run `pnpm link --global @adminforge/core`.
 
 **Note:** This can cause "Duplicate React" errors if both your test project and AdminForge have React in their `node_modules`. `yalc` avoids this.

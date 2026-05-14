@@ -1,6 +1,6 @@
 {
   "name": "example",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "private": true,
   "scripts": {
     "dev": "rm -rf .next && next dev",
@@ -13,10 +13,9 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "typecheck": "tsc --noEmit"
-
   },
   "dependencies": {
-    "adminforge": "workspace:*",
+    "@adminforge/core": "workspace:*",
     "@prisma/client": "6.19.3",
     "next": "^15.0.0",
     "next-auth": "^5.0.0-beta.25",

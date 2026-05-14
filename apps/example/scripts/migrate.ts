@@ -1,4 +1,4 @@
-import { generatePrismaSchema } from "adminforge";
+import { generatePrismaSchema } from "@adminforge/core";
 import { config } from "../src/config/adminforge";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { resolve } from "path";

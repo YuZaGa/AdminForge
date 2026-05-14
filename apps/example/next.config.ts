@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["adminforge"],
+  transpilePackages: ["@adminforge/core"],
 };
 
 export default nextConfig;

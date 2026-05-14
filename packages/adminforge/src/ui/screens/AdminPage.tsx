@@ -61,7 +61,7 @@ function CollectionActivity({ activity }: { activity?: { createdAt: string, upda
 }
 
 export function AdminPage({ config, role }: AdminPageProps) {
-  const schemaActivity = (config.collections[0] as any)?.schemaActivity;
+  const schemaActivity = config.collections?.[0] && (config.collections[0] as any)?.schemaActivity;
 
   return (
     <AdminLayout config={config} currentPath="/admin" role={role}>

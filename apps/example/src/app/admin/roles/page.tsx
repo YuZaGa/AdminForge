@@ -1,7 +1,7 @@
 "use client";
 
-import { RolesListPage } from "adminforge/ui";
-import type { AdminForgeConfig } from "adminforge";
+import { RolesListPage } from "@adminforge/core/ui";
+import type { AdminForgeConfig } from "@adminforge/core";
 import { useConfig } from "../../../lib/use-config";
 
 export default function RolesList() {
