@@ -16,13 +16,17 @@ AdminForge MCP Server  ───→  Local: Direct DB access
   JWT-scoped token enforces RBAC at every step
 ```
 
-The MCP server exposes three tools that an AI agent can call:
+The MCP server exposes these tools that an AI agent can call:
 
 | Tool | What it does |
 |------|-------------|
-| `get_form_schema` | Returns the schema + AI hints for a collection |
-| `validate_and_resolve` | Validates data and resolves relation names to IDs |
-| `create_record` | Creates a record with full RBAC enforcement |
+| `get_form_schema` | Returns the schema for a collection, including required fields and types. |
+| `list_records` | Lists records from a collection with optional limits. |
+| `search_records` | Performs a keyword search across text-based fields in a collection. |
+| `create_record` | Creates a new record with automatic validation and RBAC enforcement. |
+| `update_record` | Updates an existing record by ID. |
+| `delete_record` | Deletes a record by ID. |
+| `upload_media` | Uploads files (images/docs) and returns the public URL. |
 
 ## Prerequisites
 
@@ -126,9 +130,9 @@ Once connected, an AI agent can:
 
 1. **Discover your schema** — Ask "What collections and fields are available?" and the MCP server returns everything from your `adminforge.ts` config, including field types, validation rules, and relationship layouts.
 
-2. **Create records** — "Create a new blog post titled 'Getting Started with MCP' in the Technology category." The agent calls `get_form_schema` to understand the fields, calls `validate_and_resolve` to check data and map category names to IDs, then calls `create_record`.
+2. **Search and Manage Records** — The agent can search for existing data (e.g., to find IDs for categories) and perform CRUD operations while respecting your RBAC rules.
 
-3. **Validate before writing** — The agent can validate data against your Zod schemas and resolve relation names (e.g., `"category": "Technology"` → `"categoryId": 5`) before attempting creation.
+3. **Handle Media** — Agents can upload images and other media directly into your project's upload directory.
 
 ## Security — Built In, No Code Needed
 
@@ -139,27 +143,6 @@ Every MCP tool call requires a token. The server verifies the JWT and checks:
 - **Field-level access** — If a field has `access: { update: ["admin"] }`, an editor agent cannot write to it.
 
 **You never need to write auth middleware or permission checks.** Your existing `adminforge.ts` config handles everything.
-
-## AI Hints — Guide Your Agents
-
-Provide hints to improve AI agent output quality — still without changing your schema config:
-
-```ts
-// hints.ts
-import { defineAIHints } from "@adminforge/ai";
-
-export const hints = defineAIHints({
-  posts: {
-    description: "Engaging technical blog posts.",
-    fields: {
-      title: { description: "Catchy, SEO-optimized title." },
-      content: { style: "Professional, technical, uses subheaders." },
-    },
-  },
-});
-```
-
-Pass hints to the MCP server via `ADMINFORGE_HINTS_PATH` or embed them in your `adminforge.ts` under a `hints` key. The agent uses these hints to generate better, more relevant content.
 
 ## Quick Reference
 
@@ -183,6 +166,5 @@ npx adminforge-ai start --config ./adminforge.ts
 | MCP server setup | Zero — just `npm install` + `npx` |
 | Agent tokens | Zero — CLI generates them |
 | Auth enforcement | Zero — your config is auto-enforced |
-| AI hints | Optional — improve output quality |
 
 **AdminForge + MCP = AI-native admin without boilerplate.**

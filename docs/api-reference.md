@@ -200,10 +200,3 @@ import { AuthProvider, useAdminSession } from "adminforge/ui";
 npx adminforge-ai start          # Start MCP server
 npx adminforge-ai token          # Generate agent token
 ```
-
-### Programmatic
-
-```ts
-import { defineAIHints, mergeHints } from "@adminforge/ai";
-import type { AIHintsConfig, AIFieldHint, AICollectionHints } from "@adminforge/ai";
-```

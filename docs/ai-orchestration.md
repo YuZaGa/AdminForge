@@ -101,9 +101,13 @@ The server exposes these tools to AI agents:
 
 | Tool | Description |
 |------|-------------|
-| `get_form_schema` | Returns the schema + AI hints for a collection |
-| `validate_and_resolve` | Validates data and resolves relation names to IDs |
-| `create_record` | Creates a record with automatic RBAC enforcement |
+| `get_form_schema` | Returns the schema for a collection, including required fields and types. |
+| `list_records` | Lists records from a collection with optional limits. |
+| `search_records` | Performs a keyword search across text-based fields in a collection. |
+| `create_record` | Creates a new record with automatic validation and RBAC enforcement. |
+| `update_record` | Updates an existing record by ID. |
+| `delete_record` | Deletes a record by ID. |
+| `upload_media` | Uploads files (images/docs) and returns the public URL. |
 
 ### Using with Claude/Cursor/etc.
 
@@ -114,34 +118,14 @@ Configure your AI tool's MCP settings:
   "mcpServers": {
     "adminforge": {
       "command": "npx",
-      "args": ["adminforge-ai", "start", "--config", "./adminforge.ts"]
+      "args": ["adminforge-ai", "start", "--config", "./adminforge.ts"],
+      "env": {
+        "DATABASE_URL": "file:./dev.db",
+        "ADMINFORGE_SECRET": "your-secret-key"
+      }
     }
   }
 }
-```
-
-## AI Hints
-
-Provide guidance to AI agents about how to generate content for your collections:
-
-```ts
-import { defineAIHints } from "@adminforge/ai";
-
-export const hints = defineAIHints({
-  posts: {
-    description: "Engaging technical blog posts.",
-    fields: {
-      title: { description: "Catchy, SEO-optimized title." },
-      content: { style: "Professional, technical, uses subheaders." },
-    },
-  },
-  categories: {
-    description: "Content categories and tags.",
-    fields: {
-      name: { description: "Short, descriptive category name." },
-    },
-  },
-});
 ```
 
 ## Security Model
