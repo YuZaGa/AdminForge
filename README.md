@@ -7,180 +7,47 @@
 [![Database: Prisma](https://img.shields.io/badge/Database-Prisma-2D3748)](https://www.prisma.io/)
 [![Architecture: Monorepo](https://img.shields.io/badge/Architecture-Turborepo-EF4444)](https://turbo.build/)
 
-AdminForge is a high-performance, developer-centric monorepo designed to build beautiful administrative interfaces that are natively compatible with AI Agents. It bridges the gap between traditional CMS content management and the new era of **Agentic Orchestration**.
+Define your data schema in `adminforge.ts`, run a few commands, and get a fully functional admin dashboard with REST API, RBAC, and AI agent orchestration — like Django Admin for Next.js.
 
----
+```bash
+npx create-next-app@latest my-app && cd my-app
+npm install adminforge @prisma/client next-auth
+npx prisma init
+```
 
-## ✨ Key Features
+See the [Quickstart](docs/quickstart.md) to get running in 5 minutes.
 
-- **🔐 Secure AI Handshake**: Built-in Agent Token generation with configurable expiration and fine-grained scoping (Least Privilege).
-- **🤖 Agentic Orchestration**: Natively designed for LLMs (Gemini, Claude, GPT) to perform secure, RBAC-compliant database operations.
-- **🎨 Premium UI System**: A custom-crafted design system focusing on glassmorphism, modern typography (Inter/Outfit), and vibrant dark modes.
-- **📝 Rich Text Mastery**: Integrated Tiptap editor with custom image handling, alignment controls, and fluid layouts.
-- **🏗️ Scalable Monorepo**: Powered by Turborepo, separating core logic, UI components, and AI orchestration into reusable packages.
+## Features
 
----
+- **Schema-Driven Admin** — Define collections and fields in code, get a full CRUD UI
+- **RBAC** — Role-based access control at the collection and field level
+- **AI Orchestration** — Scoped JWT tokens and MCP server for LLM agents
+- **Rich Text** — Full-featured Tiptap editor with images, links, and formatting
+- **REST API** — Auto-generated API with validation, search, and pagination
+- **Customizable** — Custom fields, lifecycle hooks, and extensible component system
 
-## 🛠️ Technology Stack
+## Documentation
+
+| Section | Description |
+|---------|-------------|
+| [Quickstart](docs/quickstart.md) | Install, configure, and run |
+| [Schema Reference](docs/schema.md) | Collections, fields, hooks, access control |
+| [Authentication & RBAC](docs/auth.md) | Auth setup, roles, permissions |
+| [AI Orchestration](docs/ai-orchestration.md) | Agent tokens, MCP server, LLM integration |
+| [API Reference](docs/api-reference.md) | Full export reference for all packages |
+
+## Tech Stack
 
 | Layer | Technology |
-| :--- | :--- |
-| **Core Framework** | Next.js 15 (App Router) |
-| **Styling** | Vanilla CSS (Modern CSS Variables) |
-| **Database/ORM** | Prisma & PostgreSQL/SQLite |
-| **Auth** | NextAuth.js v5 |
-| **Editor** | Tiptap (Pro-level extensions) |
-| **Build System** | Turborepo & pnpm |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| ORM | Prisma (SQLite/PostgreSQL) |
+| Auth | NextAuth v5 |
+| UI | Custom design system (vanilla CSS) |
+| Editor | Tiptap |
+| AI | MCP Protocol (stdio/HTTP) |
+| Monorepo | Turborepo + pnpm |
 
----
+## License
 
-## 🚀 Getting Started
-
-### 1. Prerequisites
-- Node.js 20+
-- pnpm 9+
-
-### 2. Installation
-```bash
-# Clone the repository
-git clone https://github.com/your-username/AdminForge.git
-cd AdminForge
-
-# Install dependencies
-pnpm install
-
-# Generate Prisma client
-pnpm build
-```
-
-### 3. Environment Setup
-Create a `.env` file in `apps/example`:
-```env
-DATABASE_URL="file:./dev.db"
-NEXTAUTH_SECRET="your-secret"
-ADMINFORGE_SECRET="your-agent-signing-secret"
-```
-
-### 4. Run Development
-```bash
-pnpm dev
-```
-Navigate to `http://localhost:3000/admin` to explore the dashboard.
-
----
-
-## 🤖 AI Orchestration (How it works)
-
-AdminForge allows you to issue **Agent Tokens** that authorize AI Agents to talk to your API.
-
-1. **Generate**: Go to `Settings > Agent Tokens` in the dashboard.
-2. **Scope**: Select which collections the agent can access (e.g., `posts:create`).
-3. **Connect**: Pass the token in the `Authorization: Bearer <token>` header.
-
-**Example Request:**
-```bash
-curl -X POST http://localhost:3000/api/posts \
-  -H "Authorization: Bearer <AGENT_TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Hello from Agent", "content": "<p>Written by AI</p>"}'
-```
-
----
-
-## 📂 Project Structure
-
-```text
-├── apps
-│   └── example         # The reference implementation (Next.js App)
-├── packages
-│   ├── api             # Core API handlers & Security Context
-│   ├── db              # Prisma client & Database abstractions
-│   ├── auth            # Authentication logic & RBAC
-│   ├── admin-ui        # Shared React components & Design System
-│   └── ai              # The AI Orchestrator & MCP Server logic
-├── turbo.json          # Build pipeline configuration
-└── pnpm-workspace.yaml # Monorepo definition
-```
-
----
-
-## 🛠️ Integration Guide (For Existing Apps)
-
-If you already have a Next.js 15 application and want to add AdminForge, follow these steps:
-
-### 1. Install Packages
-```bash
-pnpm add @adminforge/api @adminforge/admin-ui @adminforge/core @adminforge/db
-```
-
-### 2. Define your Schema
-Create an `adminforge.config.ts` in your root:
-```typescript
-import { defineConfig } from "@adminforge/core";
-
-export const config = defineConfig({
-  collections: [
-    {
-      name: "posts",
-      label: "Blog Posts",
-      fields: {
-        title: { type: "text", validation: z.string().min(5) },
-        content: { type: "richText" }
-      }
-    }
-  ]
-});
-```
-
-### 3. Mount the API
-Create `app/api/[...slug]/route.ts`:
-```typescript
-import { createRouteHandlers } from "@adminforge/api/next";
-import { config } from "@/adminforge.config";
-import { db } from "@/lib/db";
-
-export const { GET, POST, PATCH, DELETE } = createRouteHandlers({ config, db });
-```
-
-### 4. Build the Dashboard
-Create `app/admin/[[...path]]/page.tsx`:
-```typescript
-import { AdminLayout } from "@adminforge/admin-ui";
-import { config } from "@/adminforge.config";
-
-export default function AdminPage() {
-  return <AdminLayout config={config} />;
-}
-```
-
----
-
-## 📖 Developer Documentation
-
-### Security & AI
-AdminForge uses a dual-layer security model. While browser users are authenticated via session cookies (e.g., NextAuth), AI agents use **Scoped JWTs**. This allows you to grant an agent "Read Only" access to your `users` collection but "Full Access" to your `posts`.
-
-### Customizing Fields
-You can extend AdminForge with custom field types by providing your own React components to the `AdminLayout` registry.
-
----
-
-## 📜 License
-
-Distributed under the **MIT License**. See `LICENSE` for more information.
-
----
-
-## 🤝 Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-**Built with ❤️ by the AdminForge Team.**
+MIT

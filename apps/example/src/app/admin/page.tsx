@@ -1,7 +1,7 @@
 "use client";
 
-import { AdminPage } from "@adminforge/admin-ui";
-import type { AdminForgeConfig } from "@adminforge/core";
+import { AdminPage } from "adminforge/ui";
+import type { AdminForgeConfig } from "adminforge";
 import { useConfig } from "../../lib/use-config";
 
 export default function AdminDashboard() {

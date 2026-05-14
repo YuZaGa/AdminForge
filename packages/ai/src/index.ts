@@ -4,46 +4,50 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { createDbClient } from "@adminforge/db";
-import { createController } from "@adminforge/api";
-import { verifyAgentToken, type SecurityContext } from "@adminforge/api/security";
-import { ContentAgent } from "./orchestrator";
-import { defineAIHints } from "./hints";
+import { createDbClient } from "adminforge";
+import { createController } from "adminforge/next";
+import { verifyAgentToken, type SecurityContext } from "adminforge/next";
+import { ContentAgent } from "./orchestrator.js";
+import path from "path";
+import fs from "fs";
+
+// --- GLOBAL STDOUT PROTECTION ---
+console.log = (...args) => console.error(...args);
 
 /**
- * --- Configuration ---
+ * --- Configuration & State ---
  */
-const CONFIG_PATH = "./adminforge-config.ts";
-
+const CONFIG_PATH_ENV = process.env.ADMINFORGE_CONFIG_PATH;
 async function loadConfig() {
-  const mod = await import(CONFIG_PATH);
-  return mod.config;
-}
+  const cwd = process.cwd();
+  const fallbacks = [
+    CONFIG_PATH_ENV,
+    "/home/yuzaga/Code/AdminForge/apps/example/src/config/adminforge.ts",
+    "./apps/example/src/config/adminforge.ts",
+    "../../apps/example/src/config/adminforge.ts",
+  ].filter(Boolean) as string[];
 
-// Example AI Hints Definition
-const aiHints = defineAIHints({
-  posts: {
-    description: "Engaging technical blog posts.",
-    fields: {
-      title: { description: "Catchy, SEO-optimized title." },
-      content: { style: "Professional, technical, uses subheaders." },
-    },
-  },
-});
+  let resolvedPath: string | null = null;
+  for (const p of fallbacks) {
+    const absolute = path.isAbsolute(p) ? p : path.resolve(cwd, p);
+    if (fs.existsSync(absolute)) {
+      resolvedPath = absolute;
+      break;
+    }
+  }
+
+  if (!resolvedPath) throw new Error("Could not find adminforge.ts config file.");
+  const importPath = path.isAbsolute(resolvedPath) ? `file://${resolvedPath}` : resolvedPath;
+  const mod = await import(importPath);
+  return { config: mod.config, path: resolvedPath };
+}
 
 /**
  * --- MCP Server Implementation ---
  */
 const server = new Server(
-  {
-    name: "adminforge-ai",
-    version: "0.2.0",
-  },
-  {
-    capabilities: {
-      tools: {},
-    },
-  }
+  { name: "adminforge-ai", version: "0.3.0" },
+  { capabilities: { tools: {} } }
 );
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -54,24 +58,26 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         description: "Returns schema + AI hints for a collection. REQUIRES TOKEN.",
         inputSchema: {
           type: "object",
-          properties: {
-            collection: { type: "string" },
-            token: { type: "string" },
-          },
+          properties: { collection: { type: "string" }, token: { type: "string" } },
           required: ["collection", "token"],
         },
       },
       {
-        name: "validate_and_resolve",
-        description: "Validates data and resolves relation names to IDs. REQUIRES TOKEN.",
+        name: "list_records",
+        description: "Lists records from a collection. REQUIRES TOKEN.",
         inputSchema: {
           type: "object",
-          properties: {
-            collection: { type: "string" },
-            data: { type: "object" },
-            token: { type: "string" },
-          },
-          required: ["collection", "data", "token"],
+          properties: { collection: { type: "string" }, limit: { type: "number" }, token: { type: "string" } },
+          required: ["collection", "token"],
+        },
+      },
+      {
+        name: "search_records",
+        description: "Search records in a collection by keyword. REQUIRES TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: { collection: { type: "string" }, query: { type: "string" }, token: { type: "string" } },
+          required: ["collection", "query", "token"],
         },
       },
       {
@@ -79,12 +85,35 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         description: "Creates record in AdminForge. REQUIRES TOKEN.",
         inputSchema: {
           type: "object",
-          properties: {
-            collection: { type: "string" },
-            data: { type: "object" },
-            token: { type: "string" },
-          },
+          properties: { collection: { type: "string" }, data: { type: "object" }, token: { type: "string" } },
           required: ["collection", "data", "token"],
+        },
+      },
+      {
+        name: "update_record",
+        description: "Updates an existing record. REQUIRES TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: { collection: { type: "string" }, id: { type: "string" }, data: { type: "object" }, token: { type: "string" } },
+          required: ["collection", "id", "data", "token"],
+        },
+      },
+      {
+        name: "delete_record",
+        description: "Deletes a record. REQUIRES TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: { collection: { type: "string" }, id: { type: "string" }, token: { type: "string" } },
+          required: ["collection", "id", "token"],
+        },
+      },
+      {
+        name: "upload_media",
+        description: "Uploads a file (base64) to the media directory. REQUIRES TOKEN.",
+        inputSchema: {
+          type: "object",
+          properties: { filename: { type: "string" }, base64: { type: "string" }, token: { type: "string" } },
+          required: ["filename", "base64", "token"],
         },
       },
     ],
@@ -94,102 +123,88 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   const token = (args as any).token || process.env.ADMINFORGE_TOKEN;
-  const apiUrl = process.env.ADMINFORGE_API_URL;
-
-  if (!token) throw new Error("Unauthorized: Missing token (provide in arguments or ADMINFORGE_TOKEN env)");
-
-  // --- REMOTE PROXY MODE ---
-  if (apiUrl) {
-    console.error(`[MCP] Proxying ${name} to ${apiUrl}...`);
-    
-    switch (name) {
-      case "get_form_schema": {
-        const res = await fetch(`${apiUrl}/api/config`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const config = await res.json();
-        const collectionName = (args as any).collection;
-        const collection = (config as any).collections.find((c: any) => c.name === collectionName);
-        // We could also implement the enrichment here or have a dedicated endpoint
-        return { content: [{ type: "text", text: JSON.stringify(collection, null, 2) }] };
-      }
-
-      case "create_record": {
-        const collectionName = (args as any).collection;
-        const res = await fetch(`${apiUrl}/api/${collectionName}`, {
-          method: "POST",
-          headers: { 
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify((args as any).data)
-        });
-        const result = await res.json();
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
-      }
-
-      default:
-        throw new Error(`Tool ${name} is not yet proxied in Remote Mode`);
-    }
+  
+  if (!token) {
+    throw new Error("Unauthorized: Missing token");
   }
 
-  // --- LOCAL MODE (Existing logic) ---
-  const agentSession = verifyAgentToken(token);
-  const config = await loadConfig();
+  // --- DB TOOLS ---
+  const agentSession = verifyAgentToken(token!);
+  const { config, path: configPath } = await loadConfig();
   const db = createDbClient(config);
-  const agent = new ContentAgent(config, db, aiHints);
+  const agent = new ContentAgent(config, db);
 
-  const securityContext: SecurityContext = {
-    agent: agentSession,
-    source: "agent",
-  };
+  const securityContext: SecurityContext = { agent: agentSession, source: "agent" };
 
   switch (name) {
     case "get_form_schema": {
-      const collectionName = (args as any).collection;
-      const fields = agent.getEnrichedSchema(collectionName);
-      return {
-        content: [{ type: "text", text: JSON.stringify({ collection: collectionName, fields }, null, 2) }],
-      };
+      const col = (args as any).collection;
+      const fields = agent.getEnrichedSchema(col);
+      return { content: [{ type: "text", text: JSON.stringify({ collection: col, fields }, null, 2) }] };
     }
 
-    case "validate_and_resolve": {
-      const collectionName = (args as any).collection;
-      const rawData = (args as any).data;
-      const { resolvedData, unresolved } = await agent.resolveRelations(collectionName, rawData);
-      const validation = await agent.validate(collectionName, resolvedData);
+    case "list_records": {
+      const col = (args as any).collection;
+      const limit = (args as any).limit || 50;
+      const results = await db.findMany(col, { take: limit });
+      return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
+    }
 
-      return {
-        content: [{ 
-          type: "text", 
-          text: JSON.stringify({ 
-            valid: validation.valid && unresolved.length === 0,
-            data: resolvedData,
-            unresolved,
-            errors: validation.valid ? [] : (validation as any).errors
-          }, null, 2) 
-        }],
-      };
+    case "search_records": {
+      const col = (args as any).collection;
+      const query = (args as any).query;
+      const collection = config.collections.find((c: any) => c.name === col)!;
+      const controller = createController(collection, db, securityContext);
+      const results = await controller.list({ search: query });
+      return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
     }
 
     case "create_record": {
-      const collectionName = (args as any).collection;
-      const data = (args as any).data;
-      const config = await loadConfig();
-      const collection = config.collections.find((c: any) => c.name === collectionName)!;
+      const col = (args as any).collection;
+      const collection = config.collections.find((c: any) => c.name === col)!;
       const controller = createController(collection, db, securityContext);
-      const result = await controller.create(data);
-      return {
-        content: [{ type: "text", text: JSON.stringify({ id: (result as any).id, status: "created" }, null, 2) }],
-      };
+      const result = await controller.create((args as any).data);
+      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+    }
+
+    case "update_record": {
+      const col = (args as any).collection;
+      const id = (args as any).id;
+      const collection = config.collections.find((c: any) => c.name === col)!;
+      const controller = createController(collection, db, securityContext);
+      const result = await controller.update(id, (args as any).data);
+      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+    }
+
+    case "delete_record": {
+      const col = (args as any).collection;
+      const id = (args as any).id;
+      const collection = config.collections.find((c: any) => c.name === col)!;
+      const controller = createController(collection, db, securityContext);
+      const result = await controller.delete(id);
+      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+    }
+
+    case "upload_media": {
+      const filename = (args as any).filename;
+      const base64 = (args as any).base64;
+      const buffer = Buffer.from(base64, "base64");
+      
+      // Resolve upload directory relative to config
+      const configDir = path.dirname(configPath);
+      const uploadDir = path.resolve(configDir, "../../public/uploads");
+      
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      const fullPath = path.join(uploadDir, filename);
+      fs.writeFileSync(fullPath, buffer);
+      
+      return { content: [{ type: "text", text: JSON.stringify({ url: `/uploads/${filename}`, status: "uploaded" }, null, 2) }] };
     }
 
     default:
-      throw new Error(`Tool ${name} not found or not yet refactored for V2`);
+      throw new Error(`Tool ${name} not found`);
   }
 });
 
 const transport = new StdioServerTransport();
 server.connect(transport).catch(console.error);
-
-console.error("AdminForge AI MCP Server V2 (Secure) running on stdio");

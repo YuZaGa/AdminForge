@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { generateAgentToken } from "@adminforge/api/security";
+import { generateAgentToken } from "adminforge/next";
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -17,7 +17,7 @@ program
 program
   .command("start")
   .description("Start the MCP server on stdio")
-  .option("-c, --config <path>", "Path to adminforge.config.ts", "./adminforge.config.ts")
+  .option("-c, --config <path>", "Path to adminforge.ts", "./adminforge.ts")
   .option("-u, --api-url <url>", "Remote AdminForge API URL (Proxy Mode)")
   .option("-t, --token <token>", "Agent Token for Proxy Mode")
   .option("-d, --db <url>", "Database URL (Local Mode)")
@@ -26,14 +26,14 @@ program
     
     // Prepare environment
     const env = { ...process.env };
+    if (options.config) env.ADMINFORGE_CONFIG_PATH = options.config;
     if (options.db) env.DATABASE_URL = options.db;
     if (options.apiUrl) env.ADMINFORGE_API_URL = options.apiUrl;
     if (options.token) env.ADMINFORGE_TOKEN = options.token;
 
-    // Run the actual server process
-    // We use node with tsx loader for now, in production we'd use the bundled dist
-    const serverPath = path.join(__dirname, "index.ts");
-    const child = spawn("npx", ["tsx", serverPath], {
+    // Run the MCP server process
+    const serverPath = path.join(__dirname, "index.js");
+    const child = spawn("node", [serverPath], {
       env,
       stdio: ["inherit", "inherit", "inherit"],
     });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
-import { generateAgentToken } from "@adminforge/api/security";
+import { generateAgentToken } from "adminforge/next";
 import { config as adminForgeConfig } from "../../../../config/adminforge";
 
 /**

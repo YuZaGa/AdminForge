@@ -1,7 +1,6 @@
-import { type AdminForgeConfig, type CollectionDefinition } from "@adminforge/core";
-import { type DbClient } from "@adminforge/db";
-import { createController } from "@adminforge/api";
-import { type AIHintsConfig, mergeHints } from "./hints";
+import { type AdminForgeConfig, type CollectionDefinition } from "adminforge";
+import { type DbClient } from "adminforge";
+import { createController } from "adminforge/next";
 import { z } from "zod";
 
 /**
@@ -11,8 +10,7 @@ import { z } from "zod";
 export class ContentAgent {
   constructor(
     private config: AdminForgeConfig,
-    private db: DbClient,
-    private hints: AIHintsConfig = {}
+    private db: DbClient
   ) {}
 
   /**
@@ -63,11 +61,16 @@ export class ContentAgent {
           const targetCollectionDef = this.config.collections.find(c => c.name === targetCollection);
           if (!targetCollectionDef) continue;
 
-          console.log(`[Orchestrator] Resolving relation for ${name}: "${val}"...`);
+          console.error(`[Orchestrator] Resolving relation for ${name}: "${val}"...`);
           
           // Build a safe query based on known common search fields
           const searchFields = ["name", "title", "label"].filter(f => targetCollectionDef.fields[f]);
-          const orQuery = searchFields.map(f => ({ [f]: { contains: val } }));
+          const orQuery = searchFields.map(f => ({ 
+            [f]: { 
+              contains: val,
+              mode: "insensitive" 
+            } 
+          }));
 
           if (orQuery.length === 0) {
             unresolved.push(name);
@@ -96,14 +99,10 @@ export class ContentAgent {
    */
   async execute(prompt: string, collectionName: string, session: any) {
     const collection = this.getCollection(collectionName);
-    console.log(`[ContentAgent] Orchestrating ${collectionName} for prompt: "${prompt}"`);
+    console.error(`[ContentAgent] Orchestrating ${collectionName} for prompt: "${prompt}"`);
 
-    // Note: In the MCP adapter, the agent will call get_form_schema (enriched)
-    // and then provide a draft. This orchestrator ensures the draft is perfect.
-    
     return {
-      status: "ready",
-      hints: this.hints[collectionName] || {},
+      status: "ready"
     };
   }
 
@@ -117,7 +116,6 @@ export class ContentAgent {
       name,
       type: field.type,
       required: field.meta?.required ?? false,
-      ai: mergeHints(collectionName, name, this.hints),
     }));
   }
 

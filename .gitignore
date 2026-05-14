@@ -7,4 +7,3 @@ dist/
 turbo/
 .turbo/
 .npmrc
-.changeset/

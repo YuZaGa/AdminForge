@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getConfig, getDb } from "../../../lib/adminforge";
-import { verifyAgentToken, type SecurityContext } from "@adminforge/api/security";
+import { verifyAgentToken, type SecurityContext } from "adminforge/next";
 
 async function getSecurity(request: NextRequest): Promise<SecurityContext> {
   // 1. Check for Agent Token
@@ -105,7 +105,7 @@ export async function POST(
   const security = await getSecurity(request);
 
   try {
-    const { createController } = await import("@adminforge/api");
+    const { createController } = await import("adminforge/next");
     const controller = createController(collection, db, security);
     const result = await controller.create(body);
     return Response.json(result, { status: 201 });
@@ -142,7 +142,7 @@ export async function PATCH(
   const security = await getSecurity(request);
 
   try {
-    const { createController } = await import("@adminforge/api");
+    const { createController } = await import("adminforge/next");
     const controller = createController(collection, db, security);
     const result = await controller.update(id, body);
     return Response.json(result);
@@ -178,7 +178,7 @@ export async function DELETE(
   const security = await getSecurity(request);
 
   try {
-    const { createController } = await import("@adminforge/api");
+    const { createController } = await import("adminforge/next");
     const controller = createController(collection, db, security);
     await controller.delete(id);
     return Response.json({ success: true });

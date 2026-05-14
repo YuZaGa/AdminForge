@@ -11,15 +11,12 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:push": "tsx scripts/migrate.ts --push",
     "db:studio": "prisma studio",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "typecheck": "tsc --noEmit"
+
   },
   "dependencies": {
-    "@adminforge/admin-ui": "workspace:*",
-    "@adminforge/api": "workspace:*",
-    "@adminforge/auth": "workspace:*",
-    "@adminforge/core": "workspace:*",
-    "@adminforge/db": "workspace:*",
-    "@adminforge/fields": "workspace:*",
+    "adminforge": "workspace:*",
     "@prisma/client": "6.19.3",
     "next": "^15.0.0",
     "next-auth": "^5.0.0-beta.25",

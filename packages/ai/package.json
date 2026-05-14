@@ -17,12 +17,12 @@
   "scripts": {
     "dev": "tsx src/cli.ts",
     "build": "tsup",
+    "typecheck": "tsc --noEmit",
     "start": "node dist/cli.js"
+
   },
   "dependencies": {
-    "@adminforge/core": "workspace:*",
-    "@adminforge/db": "workspace:*",
-    "@adminforge/api": "workspace:*",
+    "adminforge": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.1",
     "commander": "^12.1.0",
     "zod": "^3.24.0"
