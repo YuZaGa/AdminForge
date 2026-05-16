@@ -14,6 +14,8 @@
   "bin": {
     "adminforge": "./bin/adminforge.js"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -42,8 +44,6 @@
     },
     "./styles": "./dist/styles.css"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",
     "dev": "DEV=true tsup --watch",

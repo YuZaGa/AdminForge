@@ -11,7 +11,7 @@ interface AdminForgeContextType {
 
 const AdminForgeContext = createContext<AdminForgeContextType>({ 
   config: undefined, 
-  apiBase: "/api",
+  apiBase: "/api/adminforge",
   unauthorized: false 
 });
 
@@ -47,7 +47,8 @@ export function AdminForgeProvider({
           }
           return res.ok ? res.json() : null;
         })
-        .then(cfg => cfg?.collections ? setConfig(cfg) : null);
+        .then(cfg => cfg?.collections ? setConfig(cfg) : null)
+        .catch(e => console.error("[AdminForge] Failed to fetch config:", e));
     }
   }, [config, apiBase]);
 

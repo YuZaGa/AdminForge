@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import "adminforge/styles";
 
 
 export const metadata: Metadata = {

@@ -10,6 +10,7 @@ import { RoleDetailPage } from "./screens/RoleDetailPage.js";
 import { AgentTokenPage } from "./screens/AgentTokenPage.js";
 import type { AdminForgeConfig } from "../core/index.js";
 import { useAdminForge, AdminForgeProvider } from "./AdminForgeContext.js";
+import { useAdminSession } from "../auth/provider.js";
 import { useSearchParams } from "next/navigation.js";
 
 interface AdminDashboardProps {
@@ -99,9 +100,12 @@ export function AdminDashboard({ config: initialConfig, params: initialParams, a
   );
 }
 
-function AdminDashboardContent({ config, adminParams, unauthorized: localUnauthorized, data, record }: any) {
-  const { unauthorized: ctxUnauthorized } = useAdminForge();
-  const unauthorized = localUnauthorized || ctxUnauthorized;
+function AdminDashboardContent({ config: _config, adminParams, unauthorized: localUnauthorized, data, record }: any) {
+  const { config: ctxConfig, unauthorized: ctxUnauthorized } = useAdminForge();
+  const config = _config ?? ctxConfig;
+  const session = useAdminSession();
+  const noSession = config?.auth?.enabled && !session?.user;
+  const unauthorized = localUnauthorized || ctxUnauthorized || noSession;
 
   if (unauthorized) {
     return (

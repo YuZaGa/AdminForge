@@ -161,6 +161,16 @@ export function createAdminForgeApi({ config, db, auth }: RouteParams) {
         // Return serialized config for the UI
         // Detect _config anywhere in the slug to support various mounting points
         if (slug.includes("_config")) {
+          if (config.auth?.enabled && auth) {
+            try {
+              const session = await auth();
+              if (!session?.user) {
+                return jsonResponse({ error: "Unauthorized" }, 401);
+              }
+            } catch {
+              return jsonResponse({ error: "Unauthorized" }, 401);
+            }
+          }
           const { serializeConfig } = await import("../core/index.js");
           return jsonResponse(serializeConfig(config));
         }
