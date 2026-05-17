@@ -16,3 +16,4 @@ prisma/migrations/
 /.openclaude
 /.openclaude
 .mcp.json
+apps/example/prisma/dev.db

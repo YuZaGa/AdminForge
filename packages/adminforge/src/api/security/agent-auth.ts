@@ -26,9 +26,12 @@ export type SecurityContext = {
   source: "user" | "agent";
 };
 
-const SECRET = process.env.ADMINFORGE_SECRET as string;
-if (!SECRET) {
-  throw new Error("ADMINFORGE_SECRET env var is required. Generate one with: openssl rand -hex 32");
+function getSecret(): string {
+  const secret = process.env.ADMINFORGE_SECRET;
+  if (!secret) {
+    throw new Error("ADMINFORGE_SECRET env var is required. Generate one with: openssl rand -hex 32");
+  }
+  return secret;
 }
 
 /**
@@ -63,13 +66,13 @@ function assertValidCollection(collection: string): string {
  */
 
 export function generateAgentToken(
-  userId: string, 
-  role: string, 
-  scopes: string[], 
+  userId: string,
+  role: string,
+  scopes: string[],
   expiresInSeconds: number = 600
 ): string {
   const normalizedScopes = scopes.map(normalizeScope);
-  
+
   return jwt.sign(
     {
       sub: userId,
@@ -77,7 +80,7 @@ export function generateAgentToken(
       scope: normalizedScopes,
       sessionId: crypto.randomUUID(),
     },
-    SECRET,
+    getSecret(),
     {
       expiresIn: expiresInSeconds,
       issuer: "adminforge",
@@ -98,7 +101,7 @@ function isRevoked(sessionId: string): boolean {
 
 export function verifyAgentToken(token: string): AgentTokenPayload {
   try {
-    const payload = jwt.verify(token, SECRET, {
+    const payload = jwt.verify(token, getSecret(), {
       issuer: "adminforge",
       audience: "agent",
     }) as unknown as AgentTokenPayload;
