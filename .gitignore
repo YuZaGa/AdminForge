@@ -7,3 +7,12 @@ dist/
 turbo/
 .turbo/
 .npmrc
+test/
+test-lab/
+*.db
+*.db-journal
+*.tgz
+prisma/migrations/
+/.openclaude
+/.openclaude
+.mcp.json

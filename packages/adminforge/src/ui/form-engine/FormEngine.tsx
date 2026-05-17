@@ -22,10 +22,11 @@ function hasAccess(access: AccessConfig | undefined, operation: string, role?: s
 }
 
 function FieldRenderer({
-  name, field, value, onChange, onRelationChange, error, role,
+  name, field, value, onChange, onRelationChange, error, role, checked, onCheckedChange,
 }: {
   name: string; field: FieldDefinition; value?: unknown; onChange?: (val: string) => void;
   onRelationChange?: (val: string | string[]) => void; error?: string; role?: string;
+  checked?: boolean; onCheckedChange?: (checked: boolean) => void;
 }) {
   const { component, props } = field.ui;
   if (props?.hidden) return null;
@@ -50,7 +51,10 @@ function FieldRenderer({
       return (
         <div className="adminforge-field adminforge-field-checkbox">
           <label htmlFor={name}>
-            <input id={name} name={name} type="checkbox" defaultChecked={resolvedValue === true} disabled={isReadOnly} />
+            <input id={name} name={name} type="checkbox"
+              checked={!!checked}
+              onChange={(e) => onCheckedChange?.(e.target.checked)}
+              disabled={isReadOnly} />
             {(props?.label as string) ?? name}
           </label>
           {error && <span className="adminforge-field-err">{error}</span>}
@@ -94,6 +98,7 @@ export function FormEngine({ collection, record, isNew, role }: FormEngineProps)
   const formRef = useRef<HTMLFormElement>(null);
   const [richTextValues, setRichTextValues] = useState<Record<string, string>>({});
   const [relationValues, setRelationValues] = useState<Record<string, string | string[]>>({});
+  const [booleanValues, setBooleanValues] = useState<Record<string, boolean>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -105,6 +110,7 @@ export function FormEngine({ collection, record, isNew, role }: FormEngineProps)
     if (record && !isNew) {
       const rt: Record<string, string> = {};
       const rv: Record<string, string | string[]> = {};
+      const bv: Record<string, boolean> = {};
       for (const [key, value] of Object.entries(record)) {
         const field = collection.fields[key];
         if (field?.type === "richText" && typeof value === "string") rt[key] = value;
@@ -113,9 +119,11 @@ export function FormEngine({ collection, record, isNew, role }: FormEngineProps)
           else if (typeof value === "string") rv[key] = value;
           else if (value && typeof value === "object" && (value as any).id) rv[key] = (value as any).id;
         }
+        if (field?.type === "boolean") bv[key] = !!value;
       }
       setRichTextValues(rt);
       setRelationValues(rv);
+      setBooleanValues(bv);
     }
   }, [record, isNew, collection.fields]);
 
@@ -154,9 +162,15 @@ export function FormEngine({ collection, record, isNew, role }: FormEngineProps)
       const field = collection.fields[key];
       if (!hasAccess(field?.access, isNew ? "create" : "update", role)) continue;
       if (richTextValues[key]) { data[key] = richTextValues[key]; }
-      else if (field?.type === "boolean") { data[key] = value.toString() === "on"; }
+      else if (field?.type === "boolean") { continue; } // handled below from state
       else if (field?.type === "relation") { continue; }
       else { data[key] = value.toString(); }
+    }
+    // Merge boolean values from controlled state
+    for (const [name, field] of Object.entries(collection.fields)) {
+      if (field.type === "boolean" && hasAccess(field.access, isNew ? "create" : "update", role)) {
+        data[name] = booleanValues[name] ?? false;
+      }
     }
     for (const [key, val] of Object.entries(relationValues)) {
       if (collection.fields[key] && hasAccess(collection.fields[key]?.access, isNew ? "create" : "update", role)) {
@@ -176,7 +190,7 @@ export function FormEngine({ collection, record, isNew, role }: FormEngineProps)
       }
       setSubmitError(err.error ?? "An error occurred");
     }
-  }, [collection, isNew, record?.id, richTextValues, relationValues, role, canSave]);
+  }, [collection, isNew, record?.id, richTextValues, relationValues, booleanValues, role, canSave]);
 
   const handleRichTextChange = useCallback((name: string, value: string) => {
     setRichTextValues((prev) => {
@@ -219,6 +233,8 @@ export function FormEngine({ collection, record, isNew, role }: FormEngineProps)
           <FieldRenderer key={name} name={name} field={field} value={fv}
             onChange={(val) => handleRichTextChange(name, val)}
             onRelationChange={(val) => setRelationValues((prev) => ({ ...prev, [name]: val }))}
+            checked={field.type === "boolean" ? (booleanValues[name] ?? false) : undefined}
+            onCheckedChange={field.type === "boolean" ? (checked) => setBooleanValues((prev) => ({ ...prev, [name]: checked })) : undefined}
             error={fieldErrors[name]} role={role} />
         );
       })}

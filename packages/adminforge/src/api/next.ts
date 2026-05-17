@@ -21,28 +21,46 @@ function getBody(request: Request): Promise<Record<string, unknown>> {
 interface RouteParams {
   config: AdminForgeConfig;
   db: DbClient;
+  auth?: any; // The NextAuth auth() function
 }
 
-export function createRouteHandlers({ config, db }: RouteParams) {
+export function createRouteHandlers({ config, db, auth }: RouteParams) {
   // We'll create controllers per request to inject the correct security context
-  const getSecurity = (request: Request): SecurityContext => {
+  const getSecurity = async (request: Request): Promise<SecurityContext> => {
     const authHeader = request.headers.get("authorization");
-    console.error(`[Auth] Header present: ${!!authHeader}`);
     
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
-      console.error(`[Auth] Token detected (start): ${token.substring(0, 10)}...`);
       try {
         const agent = verifyAgentToken(token);
         return {
           source: "agent",
           agent,
-          user: { id: agent.sub, role: agent.role } // Bridge for RBAC
+          user: { id: agent.sub, role: agent.role } 
         };
       } catch (e: any) {
         console.error(`[Auth] Agent Verification Failed: ${e.message}`);
       }
     }
+
+    // Try to get session via NextAuth if provided
+    if (auth) {
+      try {
+        const session = await auth();
+        if (session?.user) {
+          return {
+            source: "user",
+            user: {
+              id: session.user.id || session.user.email,
+              role: (session as any).role || "user"
+            }
+          };
+        }
+      } catch (e: any) {
+        console.error(`[Auth] Session Retrieval Failed: ${e.message}`);
+      }
+    }
+
     return { source: "user" }; 
   };
 
@@ -54,7 +72,7 @@ export function createRouteHandlers({ config, db }: RouteParams) {
 
     return {
       GET: async (request: Request, context: RouteContext) => {
-        const security = getSecurity(request);
+        const security = await getSecurity(request);
         const controller = createController(collection, db, security);
         const params = await context.params;
         if (params.id) {
@@ -71,7 +89,7 @@ export function createRouteHandlers({ config, db }: RouteParams) {
       },
 
       POST: async (request: Request) => {
-        const security = getSecurity(request);
+        const security = await getSecurity(request);
         const controller = createController(collection, db, security);
         const body = await getBody(request);
         try {
@@ -88,7 +106,7 @@ export function createRouteHandlers({ config, db }: RouteParams) {
       },
 
       PATCH: async (request: Request, context: RouteContext) => {
-        const security = getSecurity(request);
+        const security = await getSecurity(request);
         const controller = createController(collection, db, security);
         const params = await context.params;
         if (!params.id) return jsonResponse({ error: "ID required" }, 400);
@@ -107,7 +125,7 @@ export function createRouteHandlers({ config, db }: RouteParams) {
       },
 
       DELETE: async (request: Request, context: RouteContext) => {
-        const security = getSecurity(request);
+        const security = await getSecurity(request);
         const controller = createController(collection, db, security);
         const params = await context.params;
         if (!params.id) return jsonResponse({ error: "ID required" }, 400);
@@ -125,8 +143,8 @@ export function createRouteHandlers({ config, db }: RouteParams) {
   return { generateHandlers };
 }
 
-export function createAdminForgeApi({ config, db }: RouteParams) {
-  const { generateHandlers } = createRouteHandlers({ config, db });
+export function createAdminForgeApi({ config, db, auth }: RouteParams) {
+  const { generateHandlers } = createRouteHandlers({ config, db, auth });
 
   const getCollectionAndId = (slug: string[]) => {
     const [collectionName, id] = slug;
@@ -135,9 +153,28 @@ export function createAdminForgeApi({ config, db }: RouteParams) {
   };
 
   return {
-    async GET(request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
+    async GET(request: Request, { params }: { params: Promise<any> }) {
       try {
-        const { slug } = await params;
+        const resolvedParams = await params;
+        const slug = resolvedParams.slug || resolvedParams.admin || Object.values(resolvedParams)[0] as string[];
+        
+        // Return serialized config for the UI
+        // Detect _config anywhere in the slug to support various mounting points
+        if (slug.includes("_config")) {
+          if (config.auth?.enabled && auth) {
+            try {
+              const session = await auth();
+              if (!session?.user) {
+                return jsonResponse({ error: "Unauthorized" }, 401);
+              }
+            } catch {
+              return jsonResponse({ error: "Unauthorized" }, 401);
+            }
+          }
+          const { serializeConfig } = await import("../core/index.js");
+          return jsonResponse(serializeConfig(config));
+        }
+
         const { handlers, id } = getCollectionAndId(slug);
         return handlers.GET(request, { params: Promise.resolve({ id: id || "" }) });
       } catch (err) {
@@ -145,9 +182,10 @@ export function createAdminForgeApi({ config, db }: RouteParams) {
       }
     },
 
-    async POST(request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
+    async POST(request: Request, { params }: { params: Promise<any> }) {
       try {
-        const { slug } = await params;
+        const resolvedParams = await params;
+        const slug = resolvedParams.slug || resolvedParams.admin || Object.values(resolvedParams)[0] as string[];
         
         // Handle Media Uploads
         if (slug[0] === "_media") {
@@ -176,6 +214,41 @@ export function createAdminForgeApi({ config, db }: RouteParams) {
           }, 201);
         }
 
+        // Handle Agent Token Generation
+        if (slug[0] === "_tokens") {
+          const { generateAgentToken } = await import("./security/agent-auth.js");
+          const body = await request.json();
+          const { scope, expiresIn = 600 } = body;
+
+          if (!Array.isArray(scope)) {
+            return jsonResponse({ error: "Scope must be an array" }, 400);
+          }
+
+          // Validation: Ensure collections exist
+          for (const s of scope) {
+            const [collection, action] = s.split(":");
+            const exists = config.collections.find(c => c.name === collection);
+            if (!exists) return jsonResponse({ error: `Invalid collection: ${collection}` }, 400);
+            if (!["create", "read", "update", "delete"].includes(action)) {
+              return jsonResponse({ error: `Invalid action: ${action}` }, 400);
+            }
+          }
+
+          // Auth: Get session
+          let userId = "admin";
+          let role = "admin";
+          if (auth) {
+            const session = await auth();
+            if (session?.user) {
+              userId = session.user.id || session.user.email;
+              role = (session as any).role || "admin";
+            }
+          }
+
+          const token = generateAgentToken(userId, role, scope, expiresIn);
+          return jsonResponse({ token });
+        }
+
         const { handlers } = getCollectionAndId(slug);
         return handlers.POST(request);
       } catch (err) {
@@ -183,9 +256,10 @@ export function createAdminForgeApi({ config, db }: RouteParams) {
       }
     },
 
-    async PATCH(request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
+    async PATCH(request: Request, { params }: { params: Promise<any> }) {
       try {
-        const { slug } = await params;
+        const resolvedParams = await params;
+        const slug = resolvedParams.slug || resolvedParams.admin || Object.values(resolvedParams)[0] as string[];
         const { handlers, id } = getCollectionAndId(slug);
         return handlers.PATCH(request, { params: Promise.resolve({ id: id || "" }) });
       } catch (err) {
@@ -193,9 +267,10 @@ export function createAdminForgeApi({ config, db }: RouteParams) {
       }
     },
 
-    async DELETE(request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
+    async DELETE(request: Request, { params }: { params: Promise<any> }) {
       try {
-        const { slug } = await params;
+        const resolvedParams = await params;
+        const slug = resolvedParams.slug || resolvedParams.admin || Object.values(resolvedParams)[0] as string[];
         const { handlers, id } = getCollectionAndId(slug);
         return handlers.DELETE(request, { params: Promise.resolve({ id: id || "" }) });
       } catch (err) {

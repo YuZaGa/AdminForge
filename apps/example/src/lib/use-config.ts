@@ -13,7 +13,7 @@ export function useConfig() {
     if (cachedConfig && cachedSession) return;
     if (!fetchPromise) {
       fetchPromise = Promise.all([
-        fetch("/api/config").then((r) => r.json()),
+        fetch("/api/admin/_config").then((r) => r.json()),
         fetch("/api/auth/session").then((r) => r.json()),
       ]);
     }

@@ -4,9 +4,9 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { createDbClient } from "adminforge";
-import { createController } from "adminforge/next";
-import { verifyAgentToken, type SecurityContext } from "adminforge/next";
+import { createDbClient } from "@adminforge/core";
+import { createController } from "@adminforge/core/next";
+import { verifyAgentToken, type SecurityContext } from "@adminforge/core/next";
 import { ContentAgent } from "./orchestrator.js";
 import path from "path";
 import fs from "fs";

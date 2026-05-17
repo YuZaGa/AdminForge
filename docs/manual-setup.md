@@ -10,7 +10,7 @@ If you don't want to use `createAdminForgeApi`, you can build your own handlers 
 // app/api/admin/[...admin]/route.ts
 import { NextRequest } from "next/server";
 import { getConfig, getDb } from "@/lib/adminforge";
-import { createRouteHandlers, verifyAgentToken, type SecurityContext } from "adminforge/next";
+import { createRouteHandlers, verifyAgentToken, type SecurityContext } from "@adminforge/core/next";
 
 async function getSecurity(request: Request): Promise<SecurityContext> {
   const authHeader = request.headers.get("authorization");
@@ -53,7 +53,7 @@ import {
   CollectionListPage, 
   CollectionFormPage, 
   CollectionSchemaPage 
-} from "adminforge/ui";
+} from "@adminforge/core/ui";
 
 export default function MyCustomPage({ collection, data }) {
   return (
@@ -76,7 +76,7 @@ export default function MyCustomPage({ collection, data }) {
 For the most extreme customization (e.g., using AdminForge as a headless CMS engine), you can use the `createController` directly.
 
 ```ts
-import { createController } from "adminforge/next";
+import { createController } from "@adminforge/core/next";
 
 const controller = createController(collection, db, securityContext);
 

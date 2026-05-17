@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import type { AdminForgeConfig } from "../../core";
 import { AdminLayout } from "../components/AdminLayout.js";
 import Link from "next/link";
+import { useAdminSession } from "../../auth/provider.js";
 
 interface AdminPageProps {
   config: AdminForgeConfig;
@@ -60,8 +61,10 @@ function CollectionActivity({ activity }: { activity?: { createdAt: string, upda
   );
 }
 
-export function AdminPage({ config, role }: AdminPageProps) {
-  const schemaActivity = (config.collections[0] as any)?.schemaActivity;
+export function AdminPage({ config, role: propRole }: AdminPageProps) {
+  const session = useAdminSession();
+  const role = propRole || session?.role || session?.user?.role;
+  const schemaActivity = config.collections?.[0] && (config.collections[0] as any)?.schemaActivity;
 
   return (
     <AdminLayout config={config} currentPath="/admin" role={role}>
@@ -110,7 +113,9 @@ export function AdminPage({ config, role }: AdminPageProps) {
               {config.collections
                 .filter((collection) => {
                   const a = collection.access;
-                  return !a?.read || !role || a.read.includes(role);
+                  if (!a?.read) return true;
+                  if (!role) return false;
+                  return a.read.includes(role);
                 })
                 .map((collection) => {
                   return (

@@ -6,7 +6,7 @@ AdminForge uses NextAuth v5 for session-based authentication. First, configure a
 
 ```ts
 // adminforge.ts
-import { defineConfig, collection, fields } from "adminforge";
+import { defineConfig, collection, fields } from "@adminforge/core";
 
 export const config = defineConfig({
   collections: [...],
@@ -130,5 +130,5 @@ Protect admin routes with Next.js middleware:
 
 ```ts
 // middleware.ts
-export { adminMiddleware as default } from "adminforge/next";
+export { adminMiddleware as default } from "@adminforge/core/next";
 ```

@@ -39,7 +39,7 @@ npx adminforge-ai token \
 ### Generate via API
 
 ```ts
-import { generateAgentToken } from "adminforge/next";
+import { generateAgentToken } from "@adminforge/core/next";
 
 const token = generateAgentToken(
   userId,       // string

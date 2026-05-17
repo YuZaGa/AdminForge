@@ -1,6 +1,6 @@
 {
-  "name": "adminforge",
-  "version": "0.2.0",
+  "name": "@adminforge/core",
+  "version": "0.3.0",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
@@ -14,6 +14,8 @@
   "bin": {
     "adminforge": "./bin/adminforge.js"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -30,10 +32,18 @@
       "import": "./dist/next.js",
       "require": "./dist/next.cjs"
     },
+    "./auth": {
+      "types": "./dist/auth.d.ts",
+      "import": "./dist/auth.js",
+      "require": "./dist/auth.cjs"
+    },
+    "./auth-client": {
+      "types": "./dist/auth-client.d.ts",
+      "import": "./dist/auth-client.js",
+      "require": "./dist/auth-client.cjs"
+    },
     "./styles": "./dist/styles.css"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",
     "dev": "DEV=true tsup --watch",

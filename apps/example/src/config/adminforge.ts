@@ -1,4 +1,4 @@
-import { defineConfig, collection, fields } from "adminforge";
+import { defineConfig, collection, fields } from "@adminforge/core";
 
 export const config = defineConfig({
   collections: [
