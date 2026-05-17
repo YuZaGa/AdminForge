@@ -1,5 +1,12 @@
 # @adminforge/ai
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [4a217a9]
+  - @adminforge/core@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
