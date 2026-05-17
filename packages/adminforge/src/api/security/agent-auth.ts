@@ -26,7 +26,10 @@ export type SecurityContext = {
   source: "user" | "agent";
 };
 
-const SECRET = process.env.ADMINFORGE_SECRET || "default-secret-change-me";
+const SECRET = process.env.ADMINFORGE_SECRET as string;
+if (!SECRET) {
+  throw new Error("ADMINFORGE_SECRET env var is required. Generate one with: openssl rand -hex 32");
+}
 
 /**
  * --- Utilities ---
@@ -98,7 +101,7 @@ export function verifyAgentToken(token: string): AgentTokenPayload {
     const payload = jwt.verify(token, SECRET, {
       issuer: "adminforge",
       audience: "agent",
-    }) as AgentTokenPayload;
+    }) as unknown as AgentTokenPayload;
 
     if (!payload.sub) throw new Error("Missing userId (sub)");
     if (!payload.role) throw new Error("Missing role");
