@@ -20,6 +20,25 @@ The latest version introduces **Self-Configuring UI**. Just add the provider to 
 
 See the [Quickstart](docs/quickstart.md) to get running in 5 minutes.
 
+<table width="100%">
+  <tr>
+    <td valign="top" width="50%">
+      <img src="./docs/images/dashboard.png" alt="Admin Dashboard" />
+    </td>
+    <td valign="top" width="50%">
+      <img src="./docs/images/posts.png" alt="Posts Management" />
+    </td>
+  </tr>
+  <tr>
+    <td valign="top" width="50%">
+      <img src="./docs/images/roles.png" alt="Role-Based Access Control" />
+    </td>
+    <td valign="top" width="50%">
+      <img src="./docs/images/token.png" alt="Agent Tokens" />
+    </td>
+  </tr>
+</table>
+
 ## Features
 
 - **Schema-Driven Admin** — Define collections and fields in code, get a full CRUD UI
